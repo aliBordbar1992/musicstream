@@ -1,0 +1,33 @@
+@baseUrl = http://localhost:8080
+
+###
+GET {{baseUrl}}/health
+
+###
+
+POST {{baseUrl}}/register
+Content-Type: application/json
+
+{
+    "username": "testuser",
+    "password": "testpassword"
+}
+
+###
+
+# @name login
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+    "username": "testuser",
+    "password": "testpassword"
+}
+
+###
+@authToken = {{login.response.body.token}}
+
+GET {{baseUrl}}/me
+Authorization: Bearer {{authToken}}
+
+###

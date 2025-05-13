@@ -1,0 +1,53 @@
+@baseUrl = http://localhost:8080
+
+# First login to get token
+# @name login
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+    "username": "testuser",
+    "password": "testpassword"
+}
+
+###
+@authToken = {{login.response.body.token}}
+
+# Create a new playlist
+POST {{baseUrl}}/playlists
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "name": "My Favorite Songs"
+}
+
+###
+# List all playlists
+GET {{baseUrl}}/playlists
+Authorization: Bearer {{authToken}}
+
+###
+# Get playlist details
+GET {{baseUrl}}/playlists/1
+Authorization: Bearer {{authToken}}
+
+###
+# Add a song to playlist
+POST {{baseUrl}}/playlists/1/songs
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "music_id": 1
+}
+
+###
+# Remove a song from playlist
+DELETE {{baseUrl}}/playlists/1/songs/1
+Authorization: Bearer {{authToken}}
+
+###
+# Delete playlist
+DELETE {{baseUrl}}/playlists/1
+Authorization: Bearer {{authToken}} 
