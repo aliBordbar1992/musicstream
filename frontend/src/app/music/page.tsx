@@ -9,8 +9,9 @@ import Input from '@/components/ui/Input';
 import ArtistSearch from '@/components/ui/ArtistSearch';
 import ConfirmModal from '@/components/ConfirmModal';
 import { SongItem } from '@/components/SongItem';
-import { QueueProvider } from '@/context/QueueContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { LayoutContent } from '@/components/LayoutContent';
+import { formatDuration } from '@/utils/formatDuration';
 
 interface Music {
   id: number;
@@ -127,7 +128,7 @@ export default function MusicPage() {
   };
 
   return (
-    <QueueProvider>
+    <LayoutContent>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-3xl font-bold mb-8">Music Library</h1>
         <form onSubmit={handleUpload} className="mb-8 space-y-4 bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-sm">
@@ -217,6 +218,6 @@ export default function MusicPage() {
           cancelText="Cancel"
         />
       </div>
-    </QueueProvider>
+    </LayoutContent>
   );
 } 

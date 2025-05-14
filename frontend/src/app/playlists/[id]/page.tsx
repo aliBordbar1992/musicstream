@@ -5,8 +5,9 @@ import { playlists, music } from '@/lib/api';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
 import ConfirmModal from '@/components/ConfirmModal';
+import { LayoutContent } from '@/components/LayoutContent';
+import { formatDuration } from '@/utils/formatDuration';
 
 interface Playlist {
   id: number;
@@ -23,8 +24,7 @@ interface Song {
   duration: number;
 }
 
-export default function PlaylistDetailPage() {
-  const params = useParams();
+export default function PlaylistPage({ params }: { params: { id: string } }) {
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const [playlist, setPlaylist] = useState<Playlist | null>(null);
   const [loading, setLoading] = useState(true);
@@ -132,12 +132,6 @@ export default function PlaylistDetailPage() {
     }
   };
 
-  const formatDuration = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-  };
-
   const handleAddSong = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!playlist || !selectedSongId) return;
@@ -179,104 +173,106 @@ export default function PlaylistDetailPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold">{playlist.name}</h1>
-          <p className="text-gray-500 dark:text-gray-400">
-            Created {new Date(playlist.created_at).toLocaleDateString()}
-          </p>
+    <LayoutContent>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold">{playlist.name}</h1>
+            <p className="text-gray-500 dark:text-gray-400">
+              Created {new Date(playlist.created_at).toLocaleDateString()}
+            </p>
+          </div>
+          <Link
+            href="/playlists"
+            className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-neutral-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-neutral-800"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+            </svg>
+            Back to Playlists
+          </Link>
         </div>
-        <Link
-          href="/playlists"
-          className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-neutral-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-neutral-800"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
-          </svg>
-          Back to Playlists
-        </Link>
-      </div>
 
-      {/* Add Song Form */}
-      {playlist.is_owner && (
-        <form onSubmit={handleAddSong} className="mb-6 flex items-center gap-2">
-          <select
-            value={selectedSongId}
-            onChange={e => setSelectedSongId(Number(e.target.value))}
-            className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          >
-            <option value="">Add a song...</option>
-            {allSongs
-              .filter(song => !(playlist.songs ?? []).some(s => s.id === song.id))
-              .map(song => (
-                <option key={song.id} value={song.id}>
-                  {song.title} - {typeof song.artist === 'string' ? song.artist : song.artist?.name}
-                </option>
-              ))}
-          </select>
-          <button
-            type="submit"
-            disabled={!selectedSongId || adding}
-            className="px-3 py-1 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-          >
-            {adding ? 'Adding...' : 'Add'}
-          </button>
-        </form>
-      )}
+        {/* Add Song Form */}
+        {playlist.is_owner && (
+          <form onSubmit={handleAddSong} className="mb-6 flex items-center gap-2">
+            <select
+              value={selectedSongId}
+              onChange={e => setSelectedSongId(Number(e.target.value))}
+              className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            >
+              <option value="">Add a song...</option>
+              {allSongs
+                .filter(song => !(playlist.songs ?? []).some(s => s.id === song.id))
+                .map(song => (
+                  <option key={song.id} value={song.id}>
+                    {song.title} - {typeof song.artist === 'string' ? song.artist : song.artist?.name}
+                  </option>
+                ))}
+            </select>
+            <button
+              type="submit"
+              disabled={!selectedSongId || adding}
+              className="px-3 py-1 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+            >
+              {adding ? 'Adding...' : 'Add'}
+            </button>
+          </form>
+        )}
 
-      <div className="bg-white dark:bg-neutral-800 shadow overflow-hidden sm:rounded-md">
-        <ul className="divide-y divide-gray-200 dark:divide-neutral-700">
-          {playlist.songs && playlist.songs.length > 0 ? (
-            playlist.songs.map((song) => (
-              <li key={song.id}>
-                <div className="px-6 py-4 flex items-center justify-between">
-                  <button
-                    onClick={() => playTrack(song)}
-                    className="flex-1 text-left"
-                  >
+        <div className="bg-white dark:bg-neutral-800 shadow overflow-hidden sm:rounded-md">
+          <ul className="divide-y divide-gray-200 dark:divide-neutral-700">
+            {playlist.songs && playlist.songs.length > 0 ? (
+              playlist.songs.map((song) => (
+                <li key={song.id}>
+                  <div className="px-6 py-4 flex items-center justify-between">
+                    <button
+                      onClick={() => playTrack(song)}
+                      className="flex-1 text-left"
+                    >
+                      <div className="flex items-center">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">{song.title}</p>
+                        {currentTrack?.id === song.id && (
+                          <span className="ml-2 text-indigo-600 dark:text-indigo-400">
+                            {isPlaying ? '▶️' : '⏸️'}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{typeof song.artist === 'string' ? song.artist : song.artist?.name}</p>
+                    </button>
                     <div className="flex items-center">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">{song.title}</p>
-                      {currentTrack?.id === song.id && (
-                        <span className="ml-2 text-indigo-600 dark:text-indigo-400">
-                          {isPlaying ? '▶️' : '⏸️'}
-                        </span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400 mr-4">
+                        {formatDuration(song.duration)}
+                      </span>
+                      {playlist.is_owner && (
+                        <button
+                          onClick={() => handleRemoveSong(song.id)}
+                          className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                        >
+                          Remove
+                        </button>
                       )}
                     </div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">{typeof song.artist === 'string' ? song.artist : song.artist?.name}</p>
-                  </button>
-                  <div className="flex items-center">
-                    <span className="text-sm text-gray-500 dark:text-gray-400 mr-4">
-                      {formatDuration(song.duration)}
-                    </span>
-                    {playlist.is_owner && (
-                      <button
-                        onClick={() => handleRemoveSong(song.id)}
-                        className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                      >
-                        Remove
-                      </button>
-                    )}
                   </div>
-                </div>
+                </li>
+              ))
+            ) : (
+              <li className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                No songs in this playlist yet
               </li>
-            ))
-          ) : (
-            <li className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
-              No songs in this playlist yet
-            </li>
-          )}
-        </ul>
-      </div>
+            )}
+          </ul>
+        </div>
 
-      <ConfirmModal
-        isOpen={showConfirmModal}
-        onClose={() => setShowConfirmModal(false)}
-        onConfirm={confirmRemoveSong}
-        title="Remove Song"
-        message="Are you sure you want to remove this song from the playlist?"
-        confirmText="Remove"
-      />
-    </div>
+        <ConfirmModal
+          isOpen={showConfirmModal}
+          onClose={() => setShowConfirmModal(false)}
+          onConfirm={confirmRemoveSong}
+          title="Remove Song"
+          message="Are you sure you want to remove this song from the playlist?"
+          confirmText="Remove"
+        />
+      </div>
+    </LayoutContent>
   );
 } 

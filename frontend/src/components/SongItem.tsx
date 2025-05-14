@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useQueue } from '../context/QueueContext';
+import { formatDuration } from '../utils/formatDuration';
 
 interface SongItemProps {
   id: number;
@@ -30,12 +31,6 @@ export function SongItem({
 }: SongItemProps) {
   const [showMenu, setShowMenu] = useState(false);
   const { addToQueue, addToNext } = useQueue();
-
-  const formatDuration = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-  };
 
   const handlePlayNext = async () => {
     await addToNext(id);
@@ -82,7 +77,7 @@ export function SongItem({
           <p className="text-sm text-gray-500 dark:text-gray-400">{artist}</p>
         </div>
         {album && <div className="text-sm text-gray-500 dark:text-gray-400">{album}</div>}
-        {duration && <div className="text-sm text-gray-500 dark:text-gray-400">{formatDuration(duration)}</div>}
+        {duration !== undefined && <div className="text-sm text-gray-500 dark:text-gray-400">{formatDuration(duration)}</div>}
       </div>
 
       <div className="relative">

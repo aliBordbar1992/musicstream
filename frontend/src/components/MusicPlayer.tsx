@@ -11,12 +11,16 @@ import {
   SpeakerWaveIcon,
   SpeakerXMarkIcon,
   XMarkIcon,
+  QueueListIcon,
 } from '@heroicons/react/24/solid';
 import { usePlayer } from '@/context/PlayerContext';
+import { useQueueSidebar } from '@/context/QueueSidebarContext';
 import Cookies from 'js-cookie';
+import { formatDuration } from '../utils/formatDuration';
 
 export default function MusicPlayer() {
   const { currentTrack, isPlaying, setIsPlaying, setCurrentTrack } = usePlayer();
+  const { toggle: toggleQueue } = useQueueSidebar();
   const [volume, setVolume] = useState(80);
   const [isMuted, setIsMuted] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -180,13 +184,6 @@ export default function MusicPlayer() {
     };
   }, [isPlaying, setIsPlaying]);
 
-  const formatTime = (time: number) => {
-    if (isNaN(time)) return '0:00';
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
-
   const handleProgressChange = (value: number) => {
     if (!audioRef.current || isNaN(audioRef.current.duration)) return;
     const newTime = (value / 100) * audioRef.current.duration;
@@ -221,7 +218,7 @@ export default function MusicPlayer() {
           {/* Progress bar - Now at the top */}
           <div className="w-full flex items-center space-x-3">
             <span className="text-sm text-neutral-500 dark:text-neutral-400 min-w-[40px]">
-              {formatTime(currentTime)}
+              {formatDuration(currentTime)}
             </span>
             <Slider.Root
               className="relative flex items-center select-none touch-none w-full h-6"
@@ -239,7 +236,7 @@ export default function MusicPlayer() {
               />
             </Slider.Root>
             <span className="text-sm text-neutral-500 dark:text-neutral-400 min-w-[40px]">
-              {formatTime(duration)}
+              {formatDuration(duration)}
             </span>
           </div>
 
@@ -249,60 +246,69 @@ export default function MusicPlayer() {
             <div className="flex items-center space-x-6 min-w-[200px] w-[25%]">
               <div className="w-16 h-16 bg-neutral-200 dark:bg-neutral-700 rounded-md overflow-hidden flex-shrink-0">
                 {currentTrack.image && (
-                  <img src={currentTrack.image} alt={currentTrack.title} className="w-full h-full object-cover" />
+                  <img
+                    src={currentTrack.image}
+                    alt={currentTrack.title}
+                    className="w-full h-full object-cover"
+                  />
                 )}
               </div>
-              <div className="min-w-0">
-                <h3 className="text-base font-medium text-neutral-900 dark:text-white truncate">
+              <div className="flex flex-col">
+                <span className="font-medium text-neutral-900 dark:text-white">
                   {currentTrack.title}
-                </h3>
-                <p className="text-sm text-neutral-500 dark:text-neutral-400 truncate">
+                </span>
+                <span className="text-sm text-neutral-500 dark:text-neutral-400">
                   {currentTrack.artist}
-                </p>
+                </span>
               </div>
             </div>
 
-            {/* Player controls - Fixed width and centered */}
-            <div className="flex-1 flex justify-center">
-              <div className="flex items-center space-x-6 w-[200px]">
-                <button
-                  onClick={() => {
-                    if (audioRef.current) {
-                      audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - 10);
-                    }
-                  }}
-                  className="p-2 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white"
-                >
-                  <BackwardIcon className="h-6 w-6" />
-                </button>
-                <button
-                  onClick={() => setIsPlaying(!isPlaying)}
-                  className="p-3 text-neutral-900 dark:text-white hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full"
-                >
-                  {isPlaying ? (
-                    <PauseIcon className="h-10 w-10" />
-                  ) : (
-                    <PlayIcon className="h-10 w-10" />
-                  )}
-                </button>
-                <button
-                  onClick={() => {
-                    if (audioRef.current) {
-                      audioRef.current.currentTime = Math.min(audioRef.current.duration, audioRef.current.currentTime + 10);
-                    }
-                  }}
-                  className="p-2 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white"
-                >
-                  <ForwardIcon className="h-6 w-6" />
-                </button>
-              </div>
+            {/* Playback controls */}
+            <div className="flex items-center justify-center space-x-4 flex-1">
+              <button
+                onClick={() => {
+                  // TODO: Implement previous track
+                }}
+                className="p-2 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full transition-colors"
+                aria-label="Previous track"
+              >
+                <BackwardIcon className="h-6 w-6" />
+              </button>
+              <button
+                onClick={() => setIsPlaying(!isPlaying)}
+                className="p-3 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full transition-colors"
+                aria-label={isPlaying ? 'Pause' : 'Play'}
+              >
+                {isPlaying ? (
+                  <PauseIcon className="h-8 w-8" />
+                ) : (
+                  <PlayIcon className="h-8 w-8" />
+                )}
+              </button>
+              <button
+                onClick={() => {
+                  // TODO: Implement next track
+                }}
+                className="p-2 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full transition-colors"
+                aria-label="Next track"
+              >
+                <ForwardIcon className="h-6 w-6" />
+              </button>
             </div>
 
-            {/* Volume control */}
-            <div className="hidden md:flex items-center space-x-3 w-[25%] justify-end">
+            {/* Volume and queue controls */}
+            <div className="flex items-center space-x-4 min-w-[200px] w-[25%] justify-end">
+              <button
+                onClick={toggleQueue}
+                className="p-2 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full transition-colors"
+                aria-label="Toggle queue"
+              >
+                <QueueListIcon className="h-6 w-6" />
+              </button>
               <button
                 onClick={() => setIsMuted(!isMuted)}
-                className="p-2 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white"
+                className="p-2 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full transition-colors"
+                aria-label={isMuted ? 'Unmute' : 'Mute'}
               >
                 {isMuted ? (
                   <SpeakerXMarkIcon className="h-6 w-6" />
@@ -310,21 +316,23 @@ export default function MusicPlayer() {
                   <SpeakerWaveIcon className="h-6 w-6" />
                 )}
               </button>
-              <Slider.Root
-                className="relative flex items-center select-none touch-none w-28 h-6"
-                value={[isMuted ? 0 : volume]}
-                onValueChange={([value]) => handleVolumeChange(value)}
-                max={100}
-                step={1}
-              >
-                <Slider.Track className="bg-neutral-200 dark:bg-neutral-700 relative grow rounded-full h-1.5">
-                  <Slider.Range className="absolute bg-primary-500 rounded-full h-full" />
-                </Slider.Track>
-                <Slider.Thumb
-                  className="block w-4 h-4 bg-white dark:bg-neutral-100 shadow-lg rounded-full hover:bg-neutral-50 dark:hover:bg-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  aria-label="Volume"
-                />
-              </Slider.Root>
+              <div className="w-24">
+                <Slider.Root
+                  className="relative flex items-center select-none touch-none w-full h-6"
+                  value={[isMuted ? 0 : volume]}
+                  onValueChange={([value]) => handleVolumeChange(value)}
+                  max={100}
+                  step={1}
+                >
+                  <Slider.Track className="bg-neutral-200 dark:bg-neutral-700 relative grow rounded-full h-1.5">
+                    <Slider.Range className="absolute bg-primary-500 rounded-full h-full" />
+                  </Slider.Track>
+                  <Slider.Thumb
+                    className="block w-4 h-4 bg-white dark:bg-neutral-100 shadow-lg rounded-full hover:bg-neutral-50 dark:hover:bg-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    aria-label="Volume"
+                  />
+                </Slider.Root>
+              </div>
             </div>
           </div>
         </div>
