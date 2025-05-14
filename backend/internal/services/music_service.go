@@ -7,15 +7,17 @@ import (
 )
 
 type musicService struct {
-	musicRepo  domain.MusicRepository
-	artistRepo domain.ArtistRepository
+	musicRepo   domain.MusicRepository
+	artistRepo  domain.ArtistRepository
+	fileService FileService
 }
 
 // NewMusicService creates a new instance of MusicService
-func NewMusicService(musicRepo domain.MusicRepository, artistRepo domain.ArtistRepository) domain.MusicService {
+func NewMusicService(musicRepo domain.MusicRepository, artistRepo domain.ArtistRepository, fileService FileService) domain.MusicService {
 	return &musicService{
-		musicRepo:  musicRepo,
-		artistRepo: artistRepo,
+		musicRepo:   musicRepo,
+		artistRepo:  artistRepo,
+		fileService: fileService,
 	}
 }
 
@@ -54,6 +56,18 @@ func (s *musicService) ListAllMusic() ([]*domain.Music, error) {
 }
 
 func (s *musicService) DeleteMusic(id uint) error {
+	// Get the file path before deleting the record
+	filePath, err := s.musicRepo.GetFilePath(id)
+	if err != nil {
+		return err
+	}
+
+	// Delete the file
+	if err := s.fileService.DeleteFile(filePath); err != nil {
+		return err
+	}
+
+	// Delete from database
 	return s.musicRepo.Delete(id)
 }
 

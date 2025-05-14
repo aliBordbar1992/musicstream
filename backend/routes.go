@@ -1,7 +1,6 @@
 package main
 
 import (
-	"math/rand"
 	"net/http"
 	"strings"
 
@@ -12,15 +11,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
-
-func generateToken() string {
-	letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-	token := make([]rune, 32)
-	for i := range token {
-		token[i] = letters[rand.Intn(len(letters))]
-	}
-	return string(token)
-}
 
 // AuthMiddleware handles authentication
 func AuthMiddleware() gin.HandlerFunc {
@@ -51,19 +41,23 @@ func RegisterRoutes(r *gin.Engine) {
 	musicRepo := repositories.NewMusicRepository(DB)
 	playlistRepo := repositories.NewPlaylistRepository(DB)
 	artistRepo := repositories.NewArtistRepository(DB)
+	queueRepo := repositories.NewQueueRepository(DB)
 
 	// Initialize services
 	userService := services.NewUserService(userRepo)
-	musicService := services.NewMusicService(musicRepo, artistRepo)
+	fileService := services.NewFileService()
+	musicService := services.NewMusicService(musicRepo, artistRepo, fileService)
 	playlistService := services.NewPlaylistService(playlistRepo, musicRepo)
-	uploadService := services.NewUploadService("uploads")
+	uploadService := services.NewUploadService("uploads", DB)
 	artistService := services.NewArtistService(artistRepo)
+	queueService := services.NewQueueService(queueRepo, musicRepo)
 
 	// Initialize controllers
 	userController := controllers.NewUserController(userService)
 	musicController := controllers.NewMusicController(musicService, uploadService)
 	playlistController := controllers.NewPlaylistController(playlistService)
 	artistController := controllers.NewArtistController(artistService)
+	queueController := controllers.NewQueueController(queueService)
 
 	// Health check
 	r.GET("/health", func(c *gin.Context) {
@@ -80,6 +74,7 @@ func RegisterRoutes(r *gin.Engine) {
 	r.GET("/music/:id", AuthMiddleware(), musicController.GetMusic)
 	r.GET("/music/:id/stream", AuthMiddleware(), musicController.StreamMusic)
 	r.GET("/music", AuthMiddleware(), musicController.ListMusic)
+	r.DELETE("/music/:id", AuthMiddleware(), musicController.DeleteMusic)
 
 	// Playlist routes
 	r.POST("/playlists", AuthMiddleware(), playlistController.CreatePlaylist)
@@ -88,8 +83,17 @@ func RegisterRoutes(r *gin.Engine) {
 	r.DELETE("/playlists/:id", AuthMiddleware(), playlistController.DeletePlaylist)
 	r.POST("/playlists/:id/songs", AuthMiddleware(), playlistController.AddSongToPlaylist)
 	r.DELETE("/playlists/:id/songs/:musicId", AuthMiddleware(), playlistController.RemoveSongFromPlaylist)
+	r.GET("/playlists/:id/songs", AuthMiddleware(), playlistController.GetPlaylistSongs)
 
 	// Artist routes
 	r.GET("/artists/search", AuthMiddleware(), artistController.SearchArtists)
 	r.POST("/artists", AuthMiddleware(), artistController.CreateArtist)
+
+	// Queue management routes
+	r.POST("/queue", AuthMiddleware(), queueController.CreateQueue)
+	r.GET("/queue", AuthMiddleware(), queueController.GetQueue)
+	r.POST("/queue/items", AuthMiddleware(), queueController.AddToQueue)
+	r.POST("/queue/next", AuthMiddleware(), queueController.AddToNext)
+	r.DELETE("/queue/items/:id", AuthMiddleware(), queueController.RemoveFromQueue)
+	r.PUT("/queue/items/:id/position", AuthMiddleware(), queueController.UpdateQueueItemPosition)
 }

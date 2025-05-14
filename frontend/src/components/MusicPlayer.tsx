@@ -39,6 +39,11 @@ export default function MusicPlayer() {
     if (currentTrack?.url) {
       const loadAudio = async () => {
         try {
+          // If we already have an object URL for this track, don't fetch again
+          if (objectUrlRef.current && audioRef.current?.src === objectUrlRef.current) {
+            return;
+          }
+
           // Clean up previous object URL if it exists
           if (objectUrlRef.current) {
             URL.revokeObjectURL(objectUrlRef.current);
@@ -127,7 +132,7 @@ export default function MusicPlayer() {
         objectUrlRef.current = null;
       }
     };
-  }, [currentTrack?.url]); // Only reload when track changes
+  }, [currentTrack?.url, isPlaying, volume, isMuted]); // Only reload when these dependencies change
 
   // Handle play/pause state
   useEffect(() => {

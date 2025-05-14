@@ -12,17 +12,20 @@ import (
 	"github.com/faiface/beep/wav"
 )
 
+// FileService handles file system operations
 type FileService interface {
 	SaveFile(filePath string, content []byte) error
 	CalculateAudioDuration(filePath string) (float64, error)
 	ValidateAudioFile(extension string) error
 	EnsureDirectoryExists(dir string) error
+	DeleteFile(filePath string) error
 }
 
 type fileService struct {
 	allowedExtensions map[string]bool
 }
 
+// NewFileService creates a new instance of FileService
 func NewFileService() FileService {
 	return &fileService{
 		allowedExtensions: map[string]bool{
@@ -77,4 +80,12 @@ func (s *fileService) ValidateAudioFile(extension string) error {
 
 func (s *fileService) EnsureDirectoryExists(dir string) error {
 	return os.MkdirAll(dir, 0755)
+}
+
+// DeleteFile deletes a file from the file system
+func (s *fileService) DeleteFile(filePath string) error {
+	if err := os.Remove(filePath); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("failed to delete file: %v", err)
+	}
+	return nil
 }

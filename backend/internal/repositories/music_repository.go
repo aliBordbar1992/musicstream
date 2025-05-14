@@ -34,6 +34,11 @@ func (r *musicRepository) FindAll() ([]*domain.Music, error) {
 }
 
 func (r *musicRepository) Delete(id uint) error {
+	// Delete all playlist associations
+	if err := r.db.Where("music_id = ?", id).Delete(&domain.PlaylistMusic{}).Error; err != nil {
+		return err
+	}
+	// Delete the music record
 	return r.db.Delete(&domain.Music{}, id).Error
 }
 
@@ -47,4 +52,13 @@ func (r *musicRepository) FindByArtist(artistID uint) ([]*domain.Music, error) {
 	var music []*domain.Music
 	err := r.db.Preload("Artist").Where("artist_id = ?", artistID).Find(&music).Error
 	return music, err
+}
+
+// GetFilePath returns the file path for a music record
+func (r *musicRepository) GetFilePath(id uint) (string, error) {
+	var music domain.Music
+	if err := r.db.First(&music, id).Error; err != nil {
+		return "", err
+	}
+	return music.FilePath, nil
 }

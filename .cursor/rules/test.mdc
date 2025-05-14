@@ -1,0 +1,104 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# MusicStream Project Guidelines
+
+## Architecture & Patterns
+- Always adhere to SOLID principles
+- Use Domain-Driven Design (DDD) where applicable
+- Follow Clean Code practices
+- Use the existing theme system for new pages
+- Reuse existing components and patterns where possible
+
+## Next.js Best Practices
+- Use Server Components by default
+- Mark components with `'use client'` only when necessary (client-side state, hooks, browser APIs)
+- Keep client-side logic in dedicated client components
+- Use React Query for data fetching and caching
+- Implement proper loading states and error boundaries
+- Implement proper code splitting
+
+## State Management
+- Use React Query for server state management
+- Use React Context for global UI state
+- Keep state as local as possible
+- Use proper state initialization patterns
+
+## Component Structure
+- Separate client and server components
+- Keep components focused and single-responsibility
+- Use TypeScript for type safety
+- Implement proper prop types and interfaces
+- Use proper error boundaries
+
+## Data Fetching
+- Use React Query for all API calls
+- Use api.ts to implement API endpoints
+- Implement proper caching strategies
+- Handle loading and error states
+- Use optimistic updates where appropriate
+- Implement proper data invalidation
+
+## Styling
+- Use Tailwind CSS for styling
+- Follow the existing theme system
+- Use CSS variables for theming
+- Implement responsive design
+- Follow accessibility guidelines
+
+## Performance
+- Implement and use proper code splitting
+- Use proper caching strategies
+- Optimize images and assets
+- Implement proper loading states
+- Minimize bundle size
+- Use proper lazy loading
+- 
+## Git Workflow
+- Use meaningful commit messages
+- Follow branching strategy
+- Review code before merging
+- Keep PRs focused and small
+- Document breaking changes
+- Prompt for commit when necessary
+
+## Monitoring
+- Implement proper logging
+- Track performance metrics
+- Monitor error rates
+- Track user behavior
+- Implement proper analytics
+
+## Code Quality
+- Use proper linting
+- Use proper formatting
+- Follow code style guide
+- Use proper naming conventions
+- Keep code DRY
+
+## Documentation Standards
+- Document complex logic
+- Document component props
+- Document API endpoints
+- Document state management
+- Keep README up to date
+
+## Dependencies Management
+- Keep dependencies up to date
+- Use proper versioning
+- Document dependency changes
+- Review security advisories
+- Use proper dependency management
+
+## Error Handling Strategy
+- Implement proper error boundaries
+- Handle API errors properly
+- Show user-friendly error messages
+- Log errors properly
+- Implement proper fallbacks
+
+## Deployment Strategy
+- Use proper environment variables

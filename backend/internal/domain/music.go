@@ -34,6 +34,7 @@ type MusicRepository interface {
 	Delete(id uint) error
 	FindByUploader(username string) ([]*Music, error)
 	FindByArtist(artistID uint) ([]*Music, error)
+	GetFilePath(id uint) (string, error)
 }
 
 // MusicService defines the interface for music business logic

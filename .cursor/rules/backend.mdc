@@ -1,0 +1,125 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Backend Architecture Guidelines
+
+## Layer Separation
+- Follow a clear layered architecture:
+  1. **Domain Layer** (`internal/domain/`)
+     - Contains core business entities and interfaces
+     - Defines repository and service interfaces
+     - No dependencies on other layers
+     - Pure business logic and data structures
+
+  2. **Repository Layer** (`internal/repositories/`)
+     - Implements domain repository interfaces
+     - Handles all data access operations
+     - Uses GORM for database operations
+     - No business logic, only data access
+
+  3. **Service Layer** (`internal/services/`)
+     - Implements domain service interfaces
+     - Contains business logic
+     - Uses repositories for data access
+     - Orchestrates operations between repositories
+
+  4. **Controller Layer** (`internal/controllers/`)
+     - Handles HTTP requests and responses
+     - Uses services for business logic
+     - No direct database access
+     - Input validation and error handling
+
+## Dependency Injection
+- Use constructor injection for dependencies
+- Dependencies should be interfaces, not concrete types
+- Example:
+```go
+type QueueController struct {
+    queueService domain.QueueService
+}
+
+func NewQueueController(queueService domain.QueueService) *QueueController {
+    return &QueueController{queueService: queueService}
+}
+```
+
+## Interface-Based Design
+- Define interfaces in domain layer
+- Implement interfaces in respective layers
+- Example:
+```go
+// Domain Layer
+type QueueService interface {
+    CreateQueue(name, userID string) (*Queue, error)
+    GetUserQueue(userID string) (*Queue, error)
+    // ...
+}
+
+// Service Layer
+type queueService struct {
+    queueRepo domain.QueueRepository
+    musicRepo domain.MusicRepository
+}
+```
+
+## Error Handling
+- Use domain-specific errors
+- Handle errors at appropriate layers
+- Return meaningful error messages
+- Example:
+```go
+if err != nil {
+    ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create queue"})
+    return
+}
+```
+
+## HTTP Response Patterns
+- Consistent response structure
+- Appropriate HTTP status codes
+- Clear error messages
+- Example:
+```go
+ctx.JSON(http.StatusOK, gin.H{
+    "message": "Queue created successfully",
+    "data": queue,
+})
+```
+
+## Database Operations
+- Use GORM for database operations
+- Use GORM for database migrations
+- Use proper relationships
+- Example:
+```go
+type Queue struct {
+    ID        uint           `json:"id" gorm:"primaryKey"`
+    Name      string         `json:"name" gorm:"not null"`
+    UserID    string         `json:"user_id" gorm:"not null"`
+    Items     []QueueItem    `json:"items" gorm:"foreignKey:QueueID"`
+}
+```
+
+## Route Organization
+- Group related routes
+- Use middleware for common operations
+- Consistent URL patterns
+- Example:
+```go
+// Queue management routes
+r.POST("/queue", AuthMiddleware(), queueController.CreateQueue)
+r.GET("/queue", AuthMiddleware(), queueController.GetQueue)
+r.POST("/queue/items", AuthMiddleware(), queueController.AddToQueue)
+```
+
+## Testing Considerations
+- Each layer should be independently testable
+- Use interfaces for easy mocking
+
+## Code Organization
+- Keep related code together
+- Use clear package names
+- Follow Go naming conventions
+- Example structure:

@@ -44,9 +44,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (username: string, password: string) => {
-    const { token, user } = await auth.login(username, password);
+    const { token } = await auth.login(username, password);
     Cookies.set('token', token, { expires: 7 }); // Token expires in 7 days
-    setUser(user);
+    
+    // Fetch user data after successful login
+    const userData = await auth.getCurrentUser();
+    setUser(userData);
   };
 
   const register = async (username: string, password: string) => {

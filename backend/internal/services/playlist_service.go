@@ -114,3 +114,18 @@ func (s *playlistService) RemoveSongFromPlaylist(playlistID, musicID uint, usern
 
 	return s.playlistRepo.RemoveSong(playlistID, musicID)
 }
+
+func (s *playlistService) GetPlaylistSongs(playlistID uint, username string) ([]*domain.Music, error) {
+	// Get playlist to check ownership
+	playlist, err := s.playlistRepo.FindByID(playlistID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if the user is the owner of the playlist
+	if playlist.CreatedBy != username {
+		return nil, errors.New("unauthorized: only playlist owner can view songs")
+	}
+
+	return s.playlistRepo.GetSongs(playlistID)
+}

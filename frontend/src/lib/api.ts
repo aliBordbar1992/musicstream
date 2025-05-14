@@ -65,6 +65,9 @@ export const music = {
     return response.data;
   },
   stream: (id: number) => `${API_URL}/music/${id}/stream`,
+  delete: async (id: number) => {
+    await api.delete(`/music/${id}`);
+  },
   searchArtists: async (query: string) => {
     const response = await api.get("/artists/search", {
       params: { query },
@@ -101,6 +104,38 @@ export const playlists = {
   },
   removeSong: async (playlistId: number, songId: number) => {
     await api.delete(`/playlists/${playlistId}/songs/${songId}`);
+  },
+  getSongs: async (playlistId: number) => {
+    const response = await api.get(`/playlists/${playlistId}/songs`);
+    return response.data;
+  },
+};
+
+export const queue = {
+  create: async () => {
+    const response = await api.post("/queue");
+    return response.data;
+  },
+  get: async () => {
+    const response = await api.get("/queue");
+    return response.data;
+  },
+  addItem: async (musicId: number) => {
+    const response = await api.post("/queue/items", { music_id: musicId });
+    return response.data;
+  },
+  addToNext: async (musicId: number) => {
+    const response = await api.post("/queue/next", { music_id: musicId });
+    return response.data;
+  },
+  removeItem: async (itemId: number) => {
+    await api.delete(`/queue/items/${itemId}`);
+  },
+  updateItemPosition: async (itemId: number, position: number) => {
+    const response = await api.put(`/queue/items/${itemId}/position`, {
+      position,
+    });
+    return response.data;
   },
 };
 

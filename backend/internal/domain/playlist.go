@@ -37,4 +37,5 @@ type PlaylistService interface {
 	DeletePlaylist(id uint, username string) error
 	AddSongToPlaylist(playlistID, musicID uint, username string) error
 	RemoveSongFromPlaylist(playlistID, musicID uint, username string) error
+	GetPlaylistSongs(playlistID uint, username string) ([]*Music, error)
 }

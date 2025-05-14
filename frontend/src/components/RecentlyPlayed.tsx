@@ -1,54 +1,76 @@
-import { motion } from 'framer-motion';
+'use client';
 
-interface Track {
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import toast from 'react-hot-toast';
+import { SongItem } from './SongItem';
+
+interface Song {
   id: number;
   title: string;
   artist: string;
-  duration: string;
-  image: string;
+  album?: string;
+  duration?: number;
+  played_at: string;
 }
 
-interface RecentlyPlayedProps {
-  tracks: Track[];
-}
+export default function RecentlyPlayed() {
+  const [songs, setSongs] = useState<Song[]>([]);
+  const [loading, setLoading] = useState(true);
 
-export default function RecentlyPlayed({ tracks }: RecentlyPlayedProps) {
+  useEffect(() => {
+    loadRecentlyPlayed();
+  }, []);
+
+  const loadRecentlyPlayed = async () => {
+    try {
+      const response = await axios.get('/recently-played');
+      setSongs(response.data);
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data?.message || 'Failed to load recently played songs');
+      } else {
+        toast.error('Failed to load recently played songs');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="animate-pulse">
+        <div className="h-8 bg-gray-200 rounded w-full mb-2"></div>
+        <div className="h-8 bg-gray-200 rounded w-full mb-2"></div>
+        <div className="h-8 bg-gray-200 rounded w-full"></div>
+      </div>
+    );
+  }
+
+  if (songs.length === 0) {
+    return (
+      <div className="text-sm text-gray-500">
+        No recently played songs
+      </div>
+    );
+  }
+
   return (
-    <section>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-neutral-900 dark:text-white">Recently Played</h2>
-        <a href="/music" className="text-primary-600 hover:underline font-medium">Go to Library</a>
-      </div>
-      <div className="space-y-4">
-        {tracks.map((track) => (
-          <motion.div
-            key={track.id}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            whileHover={{ x: 4 }}
-            className="flex items-center space-x-4 p-4 bg-white dark:bg-neutral-800 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors"
-          >
-            <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
-              <img
-                src={track.image}
-                alt={track.title}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="flex-grow">
-              <h3 className="text-lg font-medium text-neutral-900 dark:text-white">
-                {track.title}
-              </h3>
-              <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                {track.artist}
-              </p>
-            </div>
-            <div className="text-sm text-neutral-500 dark:text-neutral-400">
-              {track.duration}
-            </div>
-          </motion.div>
-        ))}
-      </div>
-    </section>
+    <div className="space-y-2">
+      {songs.map((song) => (
+        <SongItem
+          key={`${song.id}-${song.played_at}`}
+          id={song.id}
+          title={song.title}
+          artist={song.artist}
+          album={song.album}
+          duration={song.duration}
+          onPlay={() => {
+            // TODO: Implement play functionality
+            console.log('Play song:', song.id);
+          }}
+        />
+      ))}
+    </div>
   );
 } 

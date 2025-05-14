@@ -4,11 +4,25 @@ import (
 	"log"
 
 	"github.com/aliBordbar1992/musicstream-backend/internal/domain"
-	"github.com/aliBordbar1992/musicstream-backend/models"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"gorm.io/gorm"
 )
+
+func migrateSchema(db *gorm.DB) error {
+	// Auto migrate all models
+	return db.AutoMigrate(
+		&domain.User{},
+		&domain.Session{},
+		&domain.Artist{},
+		&domain.Music{},
+		&domain.Playlist{},
+		&domain.PlaylistMusic{},
+		&domain.Queue{},
+		&domain.QueueItem{},
+	)
+}
 
 func main() {
 	if err := godotenv.Load(); err != nil {
@@ -19,8 +33,10 @@ func main() {
 		log.Fatal("Failed to connect to database:", err)
 	}
 
-	// Auto-migrate the schema
-	DB.AutoMigrate(&models.User{}, &models.Session{}, &domain.Music{}, &models.Playlist{}, &models.PlaylistMusic{})
+	// Run the migration
+	if err := migrateSchema(DB); err != nil {
+		log.Fatal("Failed to migrate schema:", err)
+	}
 
 	r := gin.Default()
 

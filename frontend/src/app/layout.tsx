@@ -1,10 +1,8 @@
 import { Inter } from 'next/font/google';
-import { ThemeProvider } from '@/components/ThemeProvider';
 import './globals.css';
-import { PlayerProvider } from '@/context/PlayerContext';
 import MusicPlayer from '@/components/MusicPlayer';
 import Navigation from '@/components/Navigation';
-import { Toaster } from 'react-hot-toast';
+import Providers from '@/components/Providers';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -21,33 +19,15 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} min-h-screen bg-background text-foreground antialiased`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <PlayerProvider>
-            <div className="flex flex-col min-h-screen">
-              <Navigation />
-              <main className="flex-1 pt-16">
-                {children}
-              </main>
-              <MusicPlayer />
-            </div>
-          </PlayerProvider>
-          <Toaster
-            position="bottom-right"
-            toastOptions={{
-              duration: 3000,
-              style: {
-                background: 'var(--background)',
-                color: 'var(--foreground)',
-                border: '1px solid var(--border)',
-              },
-            }}
-          />
-        </ThemeProvider>
+        <Providers>
+          <div className="flex flex-col min-h-screen">
+            <Navigation />
+            <main className="flex-1 pt-16">
+              {children}
+            </main>
+            <MusicPlayer />
+          </div>
+        </Providers>
       </body>
     </html>
   );

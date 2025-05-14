@@ -101,3 +101,15 @@ func (c *PlaylistController) RemoveSongFromPlaylist(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{"message": "Song removed from playlist successfully"})
 }
+
+// GetPlaylistSongs handles getting songs from a playlist
+func (c *PlaylistController) GetPlaylistSongs(ctx *gin.Context) {
+	id := ctx.Param("id")
+	songs, err := c.playlistService.GetPlaylistSongs(uint(parseUint(id)), ctx.GetString("username"))
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "Failed to fetch playlist songs"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, songs)
+}

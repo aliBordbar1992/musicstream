@@ -12,19 +12,23 @@ import (
 	"gorm.io/gorm"
 )
 
-type UploadService struct {
+type UploadService interface {
+	HandleMusicUpload(ctx *gin.Context, fileService FileService, musicService domain.MusicService) (*domain.Music, error)
+}
+
+type uploadService struct {
 	uploadDir string
 	db        *gorm.DB
 }
 
-func NewUploadService(uploadDir string, db *gorm.DB) *UploadService {
-	return &UploadService{
+func NewUploadService(uploadDir string, db *gorm.DB) UploadService {
+	return &uploadService{
 		uploadDir: uploadDir,
 		db:        db,
 	}
 }
 
-func (s *UploadService) HandleMusicUpload(ctx *gin.Context, fileService FileService, musicService domain.MusicService) (*domain.Music, error) {
+func (s *uploadService) HandleMusicUpload(ctx *gin.Context, fileService FileService, musicService domain.MusicService) (*domain.Music, error) {
 	// Get form data
 	title := ctx.PostForm("title")
 	artistName := ctx.PostForm("artist")
