@@ -17,7 +17,10 @@ $directories = @(
 )
 
 foreach ($dir in $directories) {
-    New-Item -ItemType Directory -Force -Path $dir
+    if (-not (Test-Path $dir)) {
+        New-Item -ItemType Directory -Force -Path $dir
+        Write-Host "Created directory: $dir"
+    }
 }
 
 # Move components to their new locations
@@ -40,23 +43,42 @@ $moves = @{
 
 foreach ($move in $moves.GetEnumerator()) {
     if (Test-Path $move.Key) {
-        Move-Item -Path $move.Key -Destination $move.Value -Force
+        $destination = $move.Value
+        if (-not (Test-Path $destination)) {
+            New-Item -ItemType Directory -Force -Path $destination
+        }
+        Move-Item -Path $move.Key -Destination $destination -Force
+        Write-Host "Moved $($move.Key) to $($move.Value)"
+    }
+    else {
+        Write-Host "Warning: Source file not found: $($move.Key)"
     }
 }
 
 # Move utils
-Move-Item -Path "src/utils/formatDuration.ts" -Destination "src/utils/" -Force
+if (Test-Path "src/utils/formatDuration.ts") {
+    Move-Item -Path "src/utils/formatDuration.ts" -Destination "src/utils/" -Force
+    Write-Host "Moved formatDuration.ts"
+}
 
 # Move context files
 if (Test-Path "src/context") {
-    Move-Item -Path "src/context/*" -Destination "src/store/" -Force
+    if (-not (Test-Path "src/store")) {
+        New-Item -ItemType Directory -Force -Path "src/store"
+    }
+    Get-ChildItem -Path "src/context" | Move-Item -Destination "src/store/" -Force
     Remove-Item -Path "src/context" -Force
+    Write-Host "Moved context files to store"
 }
 
 # Move contexts directory if it exists
 if (Test-Path "src/contexts") {
-    Move-Item -Path "src/contexts/*" -Destination "src/store/" -Force
+    if (-not (Test-Path "src/store")) {
+        New-Item -ItemType Directory -Force -Path "src/store"
+    }
+    Get-ChildItem -Path "src/contexts" | Move-Item -Destination "src/store/" -Force
     Remove-Item -Path "src/contexts" -Force
+    Write-Host "Moved contexts files to store"
 }
 
 Write-Host "Project structure reorganization completed!" 
