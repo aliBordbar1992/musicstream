@@ -36,5 +36,7 @@ export interface AuthContextType {
 // Queue sidebar context types
 export interface QueueSidebarContextType {
   isOpen: boolean;
+  open: () => void;
+  close: () => void;
   toggle: () => void;
 }

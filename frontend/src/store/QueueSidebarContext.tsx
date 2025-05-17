@@ -1,22 +1,22 @@
 "use client";
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState } from "react";
+import { QueueSidebarContextType } from "@/types/context";
 
-interface QueueSidebarContextType {
-  isOpen: boolean;
-  open: () => void;
-  close: () => void;
-  toggle: () => void;
-}
+const QueueSidebarContext = createContext<QueueSidebarContextType | undefined>(
+  undefined
+);
 
-const QueueSidebarContext = createContext<QueueSidebarContextType | undefined>(undefined);
-
-export function QueueSidebarProvider({ children }: { children: React.ReactNode }) {
+export function QueueSidebarProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [isOpen, setIsOpen] = useState(false);
 
   const open = () => setIsOpen(true);
   const close = () => setIsOpen(false);
-  const toggle = () => setIsOpen(prev => !prev);
+  const toggle = () => setIsOpen((prev) => !prev);
 
   return (
     <QueueSidebarContext.Provider value={{ isOpen, open, close, toggle }}>
@@ -28,7 +28,9 @@ export function QueueSidebarProvider({ children }: { children: React.ReactNode }
 export function useQueueSidebar() {
   const context = useContext(QueueSidebarContext);
   if (context === undefined) {
-    throw new Error('useQueueSidebar must be used within a QueueSidebarProvider');
+    throw new Error(
+      "useQueueSidebar must be used within a QueueSidebarProvider"
+    );
   }
   return context;
-} 
+}
