@@ -1,7 +1,6 @@
 "use client";
 
-import React from 'react';
-import { useQueue } from '../context/QueueContext';
+import React from "react";
 import {
   DndContext,
   closestCenter,
@@ -9,17 +8,20 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  DragEndEvent,
-} from '@dnd-kit/core';
+} from "@dnd-kit/core";
 import {
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { SortableSongItem } from './SortableSongItem';
+} from "@dnd-kit/sortable";
+import { SortableSongItem } from "./SortableSongItem";
+import { useQueueManagement } from "@/hooks/useQueueManagement";
 
 export function QueueList() {
-  const { queue, loading, error, createQueue, updateQueueItemPosition, removeFromQueue } = useQueue();
+  const [
+    { queue, loading, error },
+    { createQueue, handleDragEnd, playItem, removeFromQueue },
+  ] = useQueueManagement();
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -27,20 +29,6 @@ export function QueueList() {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
-
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
-    
-    if (!over || !queue) return;
-
-    const oldIndex = queue.items.findIndex((item) => item.id === active.id);
-    const newIndex = queue.items.findIndex((item) => item.id === over.id);
-
-    if (oldIndex !== newIndex) {
-      // Update the position in the backend
-      await updateQueueItemPosition(Number(active.id), newIndex);
-    }
-  };
 
   if (loading) {
     return (
@@ -55,11 +43,7 @@ export function QueueList() {
   }
 
   if (error) {
-    return (
-      <div className="p-4 text-red-500">
-        Error: {error}
-      </div>
-    );
+    return <div className="p-4 text-red-500">Error: {error}</div>;
   }
 
   if (!queue) {
@@ -78,16 +62,14 @@ export function QueueList() {
 
   if (queue.items.length === 0) {
     return (
-      <div className="p-4 text-gray-500 text-center">
-        No songs in queue
-      </div>
+      <div className="p-4 text-gray-500 text-center">No songs in queue</div>
     );
   }
 
   // Sort items by type and position
   const sortedItems = [...queue.items].sort((a, b) => {
-    if (a.type === 'next' && b.type !== 'next') return -1;
-    if (a.type !== 'next' && b.type === 'next') return 1;
+    if (a.type === "next" && b.type !== "next") return -1;
+    if (a.type !== "next" && b.type === "next") return 1;
     return a.position - b.position;
   });
 
@@ -100,18 +82,15 @@ export function QueueList() {
         onDragEnd={handleDragEnd}
       >
         <SortableContext
-          items={sortedItems.map(item => item.id)}
+          items={sortedItems.map((item) => item.id)}
           strategy={verticalListSortingStrategy}
         >
           <div className="space-y-2">
             {sortedItems.map((item) => {
               if (!item.music) {
-                console.warn('Queue item has no music:', item);
+                console.warn("Queue item has no music:", item);
                 return null;
               }
-
-              const artistName = item.music.artist?.name || 'Unknown Artist';
-              const albumName = item.music.album || 'Unknown Album';
 
               return (
                 <SortableSongItem
@@ -119,13 +98,10 @@ export function QueueList() {
                   id={item.id}
                   musicId={item.music.id}
                   title={item.music.title}
-                  artist={artistName}
-                  album={albumName}
+                  artist={item.music.artist.name}
+                  album={item.music.album}
                   duration={item.music.duration}
-                  onPlay={() => {
-                    // TODO: Implement play functionality
-                    console.log('Play song:', item.music.id);
-                  }}
+                  onPlay={() => playItem(item.music.id)}
                   onRemove={() => removeFromQueue(item.id)}
                 />
               );
@@ -135,4 +111,4 @@ export function QueueList() {
       </DndContext>
     </div>
   );
-} 
+}

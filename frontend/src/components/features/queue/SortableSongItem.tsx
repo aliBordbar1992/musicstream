@@ -1,10 +1,10 @@
 "use client";
 
-import React from 'react';
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { SongItem } from './SongItem';
-import { GripVertical, X } from 'lucide-react';
+import React from "react";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { SongItem } from "./SongItem";
+import { GripVertical, X } from "lucide-react";
 
 interface SortableSongItemProps {
   id: number;
@@ -69,4 +69,4 @@ export function SortableSongItem({
       </button>
     </div>
   );
-} 
+}
