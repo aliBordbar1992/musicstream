@@ -1,22 +1,11 @@
-'use client';
+"use client";
 
-import { createContext, useContext, useEffect, useState } from 'react';
-import { auth } from '@/lib/api';
-import Cookies from 'js-cookie';
-import { useRouter } from 'next/navigation';
-
-interface User {
-  id: number;
-  username: string;
-}
-
-interface AuthContextType {
-  user: User | null;
-  loading: boolean;
-  login: (username: string, password: string) => Promise<void>;
-  register: (username: string, password: string) => Promise<void>;
-  logout: () => void;
-}
+import { createContext, useContext, useEffect, useState } from "react";
+import { auth } from "@/lib/api";
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
+import { User } from "@/types/domain";
+import { AuthContextType } from "@/types/context";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -26,14 +15,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    const token = Cookies.get('token');
+    const token = Cookies.get("token");
     if (token) {
-      auth.getCurrentUser()
+      auth
+        .getCurrentUser()
         .then((user) => {
           setUser(user);
         })
         .catch(() => {
-          Cookies.remove('token');
+          Cookies.remove("token");
         })
         .finally(() => {
           setLoading(false);
@@ -45,8 +35,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (username: string, password: string) => {
     const { token } = await auth.login(username, password);
-    Cookies.set('token', token, { expires: 7 }); // Token expires in 7 days
-    
+    Cookies.set("token", token, { expires: 7 }); // Token expires in 7 days
+
     // Fetch user data after successful login
     const userData = await auth.getCurrentUser();
     setUser(userData);
@@ -57,9 +47,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
-    Cookies.remove('token');
+    Cookies.remove("token");
     setUser(null);
-    router.push('/login');
+    router.push("/login");
   };
 
   return (
@@ -72,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
-} 
+}

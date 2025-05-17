@@ -27,9 +27,10 @@ export interface PlayerContextType {
 // Auth context types
 export interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  isAuthenticated: boolean;
+  loading: boolean;
+  login: (username: string, password: string) => Promise<void>;
+  register: (username: string, password: string) => Promise<void>;
+  logout: () => void;
 }
 
 // Queue sidebar context types
