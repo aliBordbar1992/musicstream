@@ -13,10 +13,10 @@ import {
   XMarkIcon,
   QueueListIcon,
 } from "@heroicons/react/24/solid";
-import { usePlayer } from "@/context/PlayerContext";
-import { useQueueSidebar } from "@/context/QueueSidebarContext";
+import { usePlayer } from "@/store/PlayerContext";
+import { useQueueSidebar } from "@/store/QueueSidebarContext";
 import Cookies from "js-cookie";
-import { formatDuration } from "../utils/formatDuration";
+import { formatDuration } from "@/utils/formatDuration";
 import Image from "next/image";
 export default function MusicPlayer() {
   const { currentTrack, isPlaying, setIsPlaying, setCurrentTrack } =
