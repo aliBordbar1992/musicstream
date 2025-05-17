@@ -7,35 +7,9 @@ import React, {
   useCallback,
   ReactNode,
 } from "react";
-
-export interface PlayerTrack {
-  id: number;
-  title: string;
-  artist: string;
-  duration: number;
-  image?: string;
-  url?: string;
-}
-
-interface PlayerState {
-  currentTrack: PlayerTrack | null;
-  isPlaying: boolean;
-}
-
-type PlayerAction =
-  | { type: "PLAY_TRACK"; payload: PlayerTrack }
-  | { type: "PAUSE" }
-  | { type: "SET_PLAYING"; payload: boolean }
-  | { type: "SET_TRACK"; payload: PlayerTrack | null };
-
-interface PlayerContextType {
-  currentTrack: PlayerTrack | null;
-  isPlaying: boolean;
-  playTrack: (track: PlayerTrack) => void;
-  pause: () => void;
-  setIsPlaying: (playing: boolean) => void;
-  setCurrentTrack: (track: PlayerTrack | null) => void;
-}
+import { PlayerTrack } from "@/types/domain";
+import { PlayerState, PlayerAction } from "@/types/state";
+import { PlayerContextType } from "@/types/context";
 
 const initialState: PlayerState = {
   currentTrack: null,

@@ -27,8 +27,8 @@ export interface PlayerTrack {
   title: string;
   artist: string;
   duration: number;
-  url: string;
   image?: string;
+  url?: string;
 }
 
 // User domain types
