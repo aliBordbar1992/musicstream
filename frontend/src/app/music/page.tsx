@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import { useState, useRef } from 'react';
-import { music } from '@/lib/api';
-import toast from 'react-hot-toast';
-import axios from 'axios';
-import { usePlayer } from '@/context/PlayerContext';
-import Input from '@/components/ui/Input';
-import ArtistSearch from '@/components/ui/ArtistSearch';
-import ConfirmModal from '@/components/ConfirmModal';
-import { SongItem } from '@/components/SongItem';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { LayoutContent } from '@/components/LayoutContent';
-import { formatDuration } from '@/utils/formatDuration';
+import { useState, useRef, useCallback } from "react";
+import { music } from "@/lib/api";
+import toast from "react-hot-toast";
+import axios from "axios";
+import { usePlayer } from "@/context/PlayerContext";
+import Input from "@/components/ui/Input";
+import ArtistSearch from "@/components/ui/ArtistSearch";
+import ConfirmModal from "@/components/ConfirmModal";
+import { SongItem } from "@/components/SongItem";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { LayoutContent } from "@/components/LayoutContent";
+import { Trash2 } from "lucide-react";
 
 interface Music {
   id: number;
@@ -32,32 +32,32 @@ export default function MusicPage() {
   const [trackToDelete, setTrackToDelete] = useState<Music | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
-    title: '',
-    artist: '',
-    album: '',
+    title: "",
+    artist: "",
+    album: "",
   });
   const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null);
   const { playTrack } = usePlayer();
   const queryClient = useQueryClient();
 
   const { data: tracks = [], isLoading } = useQuery({
-    queryKey: ['tracks'],
+    queryKey: ["tracks"],
     queryFn: () => music.getAll(),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => music.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tracks'] });
-      toast.success('Track deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ["tracks"] });
+      toast.success("Track deleted successfully");
       setDeleteModalOpen(false);
       setTrackToDelete(null);
     },
     onError: (error) => {
       if (axios.isAxiosError(error)) {
-        toast.error(error.response?.data?.message || 'Failed to delete track');
+        toast.error(error.response?.data?.message || "Failed to delete track");
       } else {
-        toast.error('Failed to delete track');
+        toast.error("Failed to delete track");
       }
     },
   });
@@ -78,19 +78,19 @@ export default function MusicPage() {
   };
 
   const handleUpload = async (e: React.FormEvent) => {
-    console.log('Uploading music');
+    console.log("Uploading music");
     e.preventDefault();
     const file = fileInputRef.current?.files?.[0];
     if (!file) {
-      toast.error('Please select a file to upload');
+      toast.error("Please select a file to upload");
       return;
     }
     if (!formData.title.trim()) {
-      toast.error('Please enter a title');
+      toast.error("Please enter a title");
       return;
     }
     if (!formData.artist.trim()) {
-      toast.error('Please enter an artist');
+      toast.error("Please enter an artist");
       return;
     }
     setUploading(true);
@@ -104,15 +104,15 @@ export default function MusicPage() {
         uploadData.append("artist_id", selectedArtist.id.toString());
       }
       await music.upload(uploadData);
-      toast.success('Music uploaded successfully');
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      setFormData({ title: '', artist: '', album: '' });
+      toast.success("Music uploaded successfully");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      setFormData({ title: "", artist: "", album: "" });
       setSelectedArtist(null);
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        toast.error(error.response?.data?.message || 'Failed to upload music');
+        toast.error(error.response?.data?.message || "Failed to upload music");
       } else {
-        toast.error('Failed to upload music');
+        toast.error("Failed to upload music");
       }
     } finally {
       setUploading(false);
@@ -121,17 +121,38 @@ export default function MusicPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
+
+  const createTrackObject = useCallback(
+    (track: Music) => ({
+      id: track.id,
+      title: track.title,
+      artist: track.artist.name,
+      duration: track.duration,
+      url: music.stream(track.id),
+    }),
+    []
+  );
+
+  const handlePlayTrack = useCallback(
+    (track: Music) => {
+      playTrack(createTrackObject(track));
+    },
+    [playTrack, createTrackObject]
+  );
 
   return (
     <LayoutContent>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-3xl font-bold mb-8">Music Library</h1>
-        <form onSubmit={handleUpload} className="mb-8 space-y-4 bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-sm">
+        <form
+          onSubmit={handleUpload}
+          className="mb-8 space-y-4 bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-sm"
+        >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
               id="title"
@@ -144,7 +165,9 @@ export default function MusicPage() {
             />
             <ArtistSearch
               value={formData.artist}
-              onChange={(value) => setFormData(prev => ({ ...prev, artist: value }))}
+              onChange={(value) =>
+                setFormData((prev) => ({ ...prev, artist: value }))
+              }
               onArtistSelect={handleArtistSelect}
               required
             />
@@ -157,7 +180,10 @@ export default function MusicPage() {
               placeholder="Enter album name (optional)"
             />
             <div>
-              <label htmlFor="music" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label
+                htmlFor="music"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
                 Music File
               </label>
               <input
@@ -176,7 +202,7 @@ export default function MusicPage() {
               disabled={uploading}
               className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
             >
-              {uploading ? 'Uploading...' : 'Upload Music'}
+              {uploading ? "Uploading..." : "Upload Music"}
             </button>
           </div>
         </form>
@@ -186,21 +212,26 @@ export default function MusicPage() {
               <div>Loading...</div>
             ) : (
               tracks.map((track: Music) => (
-                <SongItem
+                <div
                   key={track.id}
-                  id={track.id}
-                  title={track.title}
-                  artist={track.artist.name}
-                  duration={track.duration}
-                  onPlay={() => playTrack({
-                    id: track.id,
-                    title: track.title,
-                    artist: track.artist.name,
-                    duration: track.duration,
-                    url: music.stream(track.id),
-                  })}
-                  onRemove={() => handleDeleteClick(track)}
-                />
+                  className="flex items-center justify-between"
+                >
+                  <div className="flex-1">
+                    <SongItem
+                      id={track.id}
+                      title={track.title}
+                      artist={track.artist.name}
+                      duration={track.duration}
+                      onPlay={() => handlePlayTrack(track)}
+                    />
+                  </div>
+                  <button
+                    className="ml-4 p-2 text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                    onClick={() => handleDeleteClick(track)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               ))
             )}
           </div>
@@ -220,4 +251,4 @@ export default function MusicPage() {
       </div>
     </LayoutContent>
   );
-} 
+}

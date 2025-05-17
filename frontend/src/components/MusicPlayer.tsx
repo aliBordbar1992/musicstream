@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
-import * as Slider from '@radix-ui/react-slider';
+import { useState, useEffect, useRef } from "react";
+import { motion } from "framer-motion";
+import * as Slider from "@radix-ui/react-slider";
 import {
   PlayIcon,
   PauseIcon,
@@ -12,14 +12,15 @@ import {
   SpeakerXMarkIcon,
   XMarkIcon,
   QueueListIcon,
-} from '@heroicons/react/24/solid';
-import { usePlayer } from '@/context/PlayerContext';
-import { useQueueSidebar } from '@/context/QueueSidebarContext';
-import Cookies from 'js-cookie';
-import { formatDuration } from '../utils/formatDuration';
-
+} from "@heroicons/react/24/solid";
+import { usePlayer } from "@/context/PlayerContext";
+import { useQueueSidebar } from "@/context/QueueSidebarContext";
+import Cookies from "js-cookie";
+import { formatDuration } from "../utils/formatDuration";
+import Image from "next/image";
 export default function MusicPlayer() {
-  const { currentTrack, isPlaying, setIsPlaying, setCurrentTrack } = usePlayer();
+  const { currentTrack, isPlaying, setIsPlaying, setCurrentTrack } =
+    usePlayer();
   const { toggle: toggleQueue } = useQueueSidebar();
   const [volume, setVolume] = useState(80);
   const [isMuted, setIsMuted] = useState(false);
@@ -29,6 +30,10 @@ export default function MusicPlayer() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const objectUrlRef = useRef<string | null>(null);
   const isInitialLoad = useRef(true);
+  const hasLoadedAudio = useRef(false);
+  const currentTrackId = useRef<number | null>(null);
+  const isMounted = useRef(true);
+  const isLoading = useRef(false);
 
   const handleClose = () => {
     if (audioRef.current) {
@@ -40,117 +45,162 @@ export default function MusicPlayer() {
 
   // Load audio when track changes
   useEffect(() => {
-    if (currentTrack?.url) {
-      const loadAudio = async () => {
-        try {
-          // If we already have an object URL for this track, don't fetch again
-          if (objectUrlRef.current && audioRef.current?.src === objectUrlRef.current) {
-            return;
-          }
+    isMounted.current = true;
 
-          // Clean up previous object URL if it exists
-          if (objectUrlRef.current) {
-            URL.revokeObjectURL(objectUrlRef.current);
-            objectUrlRef.current = null;
-          }
+    if (!currentTrack?.url) return;
 
-          // Fetch the audio with proper headers
-          const token = Cookies.get('token');
-          if (!token) {
-            throw new Error('No authentication token found');
-          }
+    const loadAudio = async () => {
+      // Prevent concurrent loads
+      if (isLoading.current) return;
 
-          const url = currentTrack.url;
-          if (!url) {
-            throw new Error('No audio URL found');
-          }
+      try {
+        isLoading.current = true;
 
-          const response = await fetch(url, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-            },
-          });
-
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-
-          // Create a blob from the response
-          const blob = await response.blob();
-          
-          // Create an object URL from the blob
-          const objectUrl = URL.createObjectURL(blob);
-          objectUrlRef.current = objectUrl;
-
-          // Initialize or update audio element
-          if (!audioRef.current) {
-            audioRef.current = new Audio();
-          }
-
-          // Set up event listeners before setting the source
-          audioRef.current.addEventListener('loadedmetadata', () => {
-            if (audioRef.current) {
-              setDuration(audioRef.current.duration);
-              if (isInitialLoad.current) {
-                isInitialLoad.current = false;
-                if (isPlaying) {
-                  audioRef.current.play().catch(error => {
-                    console.error('Error playing audio:', error);
-                    setIsPlaying(false);
-                  });
-                }
-              }
-            }
-          });
-
-          audioRef.current.addEventListener('timeupdate', () => {
-            if (audioRef.current) {
-              const newTime = audioRef.current.currentTime;
-              const newProgress = (newTime / audioRef.current.duration) * 100;
-              setCurrentTime(newTime);
-              setProgress(newProgress);
-            }
-          });
-
-          // Set the source and other properties
-          audioRef.current.src = objectUrl;
-          audioRef.current.volume = volume / 100;
-          audioRef.current.muted = isMuted;
-
-          if (isPlaying) {
+        // If we already have an object URL for this track and audio is loaded, don't fetch again
+        if (
+          objectUrlRef.current &&
+          audioRef.current?.src === objectUrlRef.current &&
+          audioRef.current?.readyState !== undefined &&
+          audioRef.current.readyState >= 2 && // HAVE_CURRENT_DATA
+          currentTrackId.current === currentTrack.id
+        ) {
+          // If the audio is already loaded but not playing and isPlaying is true, start playing
+          if (!audioRef.current.paused && !isPlaying) {
+            audioRef.current.pause();
+          } else if (audioRef.current.paused && isPlaying) {
             await audioRef.current.play();
           }
-        } catch (error) {
-          console.error('Error loading audio:', error);
+          isLoading.current = false;
+          return;
+        }
+
+        // If we've already loaded this track, don't fetch again
+        if (
+          hasLoadedAudio.current &&
+          currentTrackId.current === currentTrack.id &&
+          audioRef.current?.readyState >= 2
+        ) {
+          isLoading.current = false;
+          return;
+        }
+
+        // Clean up previous object URL if it exists
+        if (objectUrlRef.current) {
+          URL.revokeObjectURL(objectUrlRef.current);
+          objectUrlRef.current = null;
+        }
+
+        // Fetch the audio with proper headers
+        const token = Cookies.get("token");
+        if (!token) {
+          throw new Error("No authentication token found");
+        }
+
+        const url = currentTrack.url;
+        if (!url) {
+          throw new Error("No audio URL found");
+        }
+
+        const response = await fetch(url, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        // Create a blob from the response
+        const blob = await response.blob();
+
+        // Create an object URL from the blob
+        const objectUrl = URL.createObjectURL(blob);
+        objectUrlRef.current = objectUrl;
+
+        // Initialize or update audio element
+        if (!audioRef.current) {
+          audioRef.current = new Audio();
+        }
+
+        // Set up event listeners before setting the source
+        audioRef.current.addEventListener("loadedmetadata", () => {
+          if (audioRef.current && isMounted.current) {
+            setDuration(audioRef.current.duration);
+            if (isInitialLoad.current) {
+              isInitialLoad.current = false;
+              if (isPlaying) {
+                audioRef.current.play().catch((error) => {
+                  console.error("Error playing audio:", error);
+                  setIsPlaying(false);
+                });
+              }
+            }
+            hasLoadedAudio.current = true;
+            currentTrackId.current = currentTrack.id;
+          }
+        });
+
+        audioRef.current.addEventListener("timeupdate", () => {
+          if (audioRef.current && isMounted.current) {
+            const newTime = audioRef.current.currentTime;
+            const newProgress = (newTime / audioRef.current.duration) * 100;
+            setCurrentTime(newTime);
+            setProgress(newProgress);
+          }
+        });
+
+        // Set the source and other properties
+        audioRef.current.src = objectUrl;
+        audioRef.current.volume = volume / 100;
+        audioRef.current.muted = isMuted;
+
+        if (isPlaying) {
+          await audioRef.current.play();
+        }
+      } catch (error) {
+        console.error("Error loading audio:", error);
+        if (isMounted.current) {
           setIsPlaying(false);
         }
-      };
-
-      loadAudio();
-    }
-
-    return () => {
-      // Clean up object URL when component unmounts or track changes
-      if (objectUrlRef.current) {
-        URL.revokeObjectURL(objectUrlRef.current);
-        objectUrlRef.current = null;
+      } finally {
+        isLoading.current = false;
       }
     };
-  }, [currentTrack?.url, isPlaying, volume, isMuted]); // Only reload when these dependencies change
 
-  // Handle play/pause state
+    loadAudio();
+
+    return () => {
+      isMounted.current = false;
+    };
+  }, [currentTrack?.url]); // Only reload when track URL changes
+
+  // Handle play/pause state separately
   useEffect(() => {
-    if (!audioRef.current) return;
+    if (!audioRef.current || !currentTrack?.url) return;
 
     if (isPlaying) {
-      audioRef.current.play().catch(error => {
-        console.error('Error playing audio:', error);
+      audioRef.current.play().catch((error) => {
+        console.error("Error playing audio:", error);
         setIsPlaying(false);
       });
     } else {
       audioRef.current.pause();
     }
-  }, [isPlaying, setIsPlaying]);
+  }, [isPlaying, currentTrack?.url]);
+
+  // Clean up audio resources when component is unmounted
+  useEffect(() => {
+    return () => {
+      if (objectUrlRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current);
+        objectUrlRef.current = null;
+      }
+      hasLoadedAudio.current = false;
+      currentTrackId.current = null;
+      isMounted.current = false;
+    };
+  }, []); // Empty dependency array means this runs only on unmount
 
   // Handle volume and mute changes
   useEffect(() => {
@@ -171,16 +221,16 @@ export default function MusicPlayer() {
     };
 
     const handleError = (error: Event) => {
-      console.error('Audio error:', error);
+      console.error("Audio error:", error);
       setIsPlaying(false);
     };
 
-    audio.addEventListener('ended', handleEnded);
-    audio.addEventListener('error', handleError);
+    audio.addEventListener("ended", handleEnded);
+    audio.addEventListener("error", handleError);
 
     return () => {
-      audio.removeEventListener('ended', handleEnded);
-      audio.removeEventListener('error', handleError);
+      audio.removeEventListener("ended", handleEnded);
+      audio.removeEventListener("error", handleError);
     };
   }, [isPlaying, setIsPlaying]);
 
@@ -193,6 +243,7 @@ export default function MusicPlayer() {
   };
 
   const handleVolumeChange = (value: number) => {
+    console.log("Volume changed:", value);
     setVolume(value);
     setIsMuted(value === 0);
   };
@@ -246,7 +297,7 @@ export default function MusicPlayer() {
             <div className="flex items-center space-x-6 min-w-[200px] w-[25%]">
               <div className="w-16 h-16 bg-neutral-200 dark:bg-neutral-700 rounded-md overflow-hidden flex-shrink-0">
                 {currentTrack.image && (
-                  <img
+                  <Image
                     src={currentTrack.image}
                     alt={currentTrack.title}
                     className="w-full h-full object-cover"
@@ -277,7 +328,7 @@ export default function MusicPlayer() {
               <button
                 onClick={() => setIsPlaying(!isPlaying)}
                 className="p-3 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full transition-colors"
-                aria-label={isPlaying ? 'Pause' : 'Play'}
+                aria-label={isPlaying ? "Pause" : "Play"}
               >
                 {isPlaying ? (
                   <PauseIcon className="h-8 w-8" />
@@ -308,7 +359,7 @@ export default function MusicPlayer() {
               <button
                 onClick={() => setIsMuted(!isMuted)}
                 className="p-2 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full transition-colors"
-                aria-label={isMuted ? 'Unmute' : 'Mute'}
+                aria-label={isMuted ? "Unmute" : "Mute"}
               >
                 {isMuted ? (
                   <SpeakerXMarkIcon className="h-6 w-6" />
@@ -339,4 +390,4 @@ export default function MusicPlayer() {
       </div>
     </motion.div>
   );
-} 
+}
