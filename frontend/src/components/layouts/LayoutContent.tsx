@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import MusicPlayer from "@/components/features/music/MusicPlayer";
 import Navigation from "@/components/layouts/Navigation";
 import { QueueSidebar } from "@/components/features/queue/QueueSidebar";
 import { useQueueSidebar } from "@/store/QueueSidebarContext";
@@ -19,7 +18,6 @@ export function LayoutContent({ children }: { children: React.ReactNode }) {
         <main className="flex-1 h-full">{children}</main>
         <QueueSidebar isOpen={isOpen} onClose={close} />
       </div>
-      <MusicPlayer />
     </div>
   );
 }
