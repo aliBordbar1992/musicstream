@@ -1,30 +1,30 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Navigation from "@/components/Navigation";
-import FeaturedPlaylists from "@/components/FeaturedPlaylists";
-import RecentlyPlayed from "@/components/RecentlyPlayed";
-import { LayoutContent } from "@/components/LayoutContent";
-import { QueueProvider } from "@/context/QueueContext";
+import Navigation from "@/components/layouts/Navigation";
+import FeaturedPlaylists from "@/components/features/playlist/FeaturedPlaylists";
+import RecentlyPlayed from "@/components/features/music/RecentlyPlayed";
+import { LayoutContent } from "@/components/layouts/LayoutContent";
+import { QueueProvider } from "@/store/QueueContext";
 
 const featuredPlaylists = [
   {
     id: 1,
     title: "Top Hits 2024",
     description: "The hottest tracks of 2024",
-    image: "/playlists/top-hits.jpg",
+    image: "https://placehold.co/600x400/png",
   },
   {
     id: 2,
     title: "Chill Vibes",
     description: "Relaxing tunes for your day",
-    image: "/playlists/chill-vibes.jpg",
+    image: "https://placehold.co/600x400/png",
   },
   {
     id: 3,
     title: "Workout Mix",
     description: "High-energy tracks to keep you moving",
-    image: "/playlists/workout-mix.jpg",
+    image: "https://placehold.co/600x400/png",
   },
 ];
 

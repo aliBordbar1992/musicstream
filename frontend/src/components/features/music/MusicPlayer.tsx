@@ -78,6 +78,7 @@ export default function MusicPlayer() {
         if (
           hasLoadedAudio.current &&
           currentTrackId.current === currentTrack.id &&
+          audioRef.current?.readyState !== undefined &&
           audioRef.current?.readyState >= 2
         ) {
           isLoading.current = false;

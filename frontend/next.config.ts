@@ -11,3 +11,9 @@ const nextConfig = {
 };
 
 export default nextConfig;
+
+module.exports = {
+  images: {
+    remotePatterns: [new URL("https://placehold.co/**")],
+  },
+};

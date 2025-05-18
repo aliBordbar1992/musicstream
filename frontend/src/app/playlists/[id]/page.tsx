@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useRef } from 'react';
-import { playlists, music } from '@/lib/api';
-import toast from 'react-hot-toast';
-import axios from 'axios';
-import Link from 'next/link';
-import ConfirmModal from '@/components/ConfirmModal';
-import { LayoutContent } from '@/components/LayoutContent';
-import { formatDuration } from '@/utils/formatDuration';
+import { useEffect, useState, useRef } from "react";
+import { playlists, music } from "@/lib/api";
+import toast from "react-hot-toast";
+import axios from "axios";
+import Link from "next/link";
+import ConfirmModal from "@/components/common/ConfirmModal";
+import { LayoutContent } from "@/components/layouts/LayoutContent";
+import { formatDuration } from "@/utils/formatDuration";
 
 interface Playlist {
   id: number;
@@ -34,7 +34,7 @@ export default function PlaylistPage({ params }: { params: { id: string } }) {
   const [songToRemove, setSongToRemove] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [allSongs, setAllSongs] = useState<Song[]>([]);
-  const [selectedSongId, setSelectedSongId] = useState<number | ''>('');
+  const [selectedSongId, setSelectedSongId] = useState<number | "">("");
   const [adding, setAdding] = useState(false);
 
   useEffect(() => {
@@ -47,7 +47,7 @@ export default function PlaylistPage({ params }: { params: { id: string } }) {
   useEffect(() => {
     // Initialize audio element on client side
     audioRef.current = new Audio();
-    
+
     return () => {
       // Cleanup
       if (audioRef.current) {
@@ -64,9 +64,9 @@ export default function PlaylistPage({ params }: { params: { id: string } }) {
       setPlaylist(data);
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        toast.error(error.response?.data?.message || 'Failed to load playlist');
+        toast.error(error.response?.data?.message || "Failed to load playlist");
       } else {
-        toast.error('Failed to load playlist');
+        toast.error("Failed to load playlist");
       }
     } finally {
       setLoading(false);
@@ -114,7 +114,7 @@ export default function PlaylistPage({ params }: { params: { id: string } }) {
 
     try {
       await playlists.removeSong(playlist.id, songToRemove);
-      const songToRemoveObj = playlist.songs.find(s => s.id === songToRemove);
+      const songToRemoveObj = playlist.songs.find((s) => s.id === songToRemove);
       setPlaylist({
         ...playlist,
         songs: playlist.songs.filter((s) => s.id !== songToRemove),
@@ -122,9 +122,9 @@ export default function PlaylistPage({ params }: { params: { id: string } }) {
       toast.success(`Removed "${songToRemoveObj?.title}" from playlist`);
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        toast.error(error.response?.data?.message || 'Failed to remove song');
+        toast.error(error.response?.data?.message || "Failed to remove song");
       } else {
-        toast.error('Failed to remove song');
+        toast.error("Failed to remove song");
       }
     } finally {
       setShowConfirmModal(false);
@@ -138,15 +138,15 @@ export default function PlaylistPage({ params }: { params: { id: string } }) {
     setAdding(true);
     try {
       await playlists.addSong(playlist.id, selectedSongId);
-      toast.success('Song added to playlist');
+      toast.success("Song added to playlist");
       // Refetch playlist
       await loadPlaylist();
-      setSelectedSongId('');
+      setSelectedSongId("");
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        toast.error(error.response?.data?.message || 'Failed to add song');
+        toast.error(error.response?.data?.message || "Failed to add song");
       } else {
-        toast.error('Failed to add song');
+        toast.error("Failed to add song");
       }
     } finally {
       setAdding(false);
@@ -165,7 +165,10 @@ export default function PlaylistPage({ params }: { params: { id: string } }) {
     return (
       <div className="text-center">
         <h1 className="text-3xl font-bold mb-4">Playlist not found</h1>
-        <Link href="/playlists" className="text-indigo-600 hover:text-indigo-500">
+        <Link
+          href="/playlists"
+          className="text-indigo-600 hover:text-indigo-500"
+        >
           Back to Playlists
         </Link>
       </div>
@@ -186,8 +189,19 @@ export default function PlaylistPage({ params }: { params: { id: string } }) {
             href="/playlists"
             className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-neutral-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-neutral-800"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-5 h-5 mr-2"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"
+              />
             </svg>
             Back to Playlists
           </Link>
@@ -195,18 +209,27 @@ export default function PlaylistPage({ params }: { params: { id: string } }) {
 
         {/* Add Song Form */}
         {playlist.is_owner && (
-          <form onSubmit={handleAddSong} className="mb-6 flex items-center gap-2">
+          <form
+            onSubmit={handleAddSong}
+            className="mb-6 flex items-center gap-2"
+          >
             <select
               value={selectedSongId}
-              onChange={e => setSelectedSongId(Number(e.target.value))}
+              onChange={(e) => setSelectedSongId(Number(e.target.value))}
               className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
             >
               <option value="">Add a song...</option>
               {allSongs
-                .filter(song => !(playlist.songs ?? []).some(s => s.id === song.id))
-                .map(song => (
+                .filter(
+                  (song) =>
+                    !(playlist.songs ?? []).some((s) => s.id === song.id)
+                )
+                .map((song) => (
                   <option key={song.id} value={song.id}>
-                    {song.title} - {typeof song.artist === 'string' ? song.artist : song.artist?.name}
+                    {song.title} -{" "}
+                    {typeof song.artist === "string"
+                      ? song.artist
+                      : song.artist?.name}
                   </option>
                 ))}
             </select>
@@ -215,7 +238,7 @@ export default function PlaylistPage({ params }: { params: { id: string } }) {
               disabled={!selectedSongId || adding}
               className="px-3 py-1 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
             >
-              {adding ? 'Adding...' : 'Add'}
+              {adding ? "Adding..." : "Add"}
             </button>
           </form>
         )}
@@ -231,14 +254,20 @@ export default function PlaylistPage({ params }: { params: { id: string } }) {
                       className="flex-1 text-left"
                     >
                       <div className="flex items-center">
-                        <p className="text-sm font-medium text-gray-900 dark:text-white">{song.title}</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">
+                          {song.title}
+                        </p>
                         {currentTrack?.id === song.id && (
                           <span className="ml-2 text-indigo-600 dark:text-indigo-400">
-                            {isPlaying ? '▶️' : '⏸️'}
+                            {isPlaying ? "▶️" : "⏸️"}
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{typeof song.artist === 'string' ? song.artist : song.artist?.name}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {typeof song.artist === "string"
+                          ? song.artist
+                          : song.artist?.name}
+                      </p>
                     </button>
                     <div className="flex items-center">
                       <span className="text-sm text-gray-500 dark:text-gray-400 mr-4">
@@ -275,4 +304,4 @@ export default function PlaylistPage({ params }: { params: { id: string } }) {
       </div>
     </LayoutContent>
   );
-} 
+}

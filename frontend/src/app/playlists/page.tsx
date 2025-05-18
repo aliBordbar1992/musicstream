@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { useQuery } from '@tanstack/react-query';
-import { playlists } from '@/lib/api';
-import { LayoutContent } from '@/components/LayoutContent';
-
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
+import { playlists } from "@/lib/api";
+import { LayoutContent } from "@/components/layouts/LayoutContent";
+import Image from "next/image";
 interface Playlist {
   id: number;
   title: string;
@@ -14,14 +14,14 @@ interface Playlist {
 }
 
 export default function PlaylistsPage() {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { data: playlistsList = [], isLoading } = useQuery<Playlist[]>({
-    queryKey: ['playlists'],
+    queryKey: ["playlists"],
     queryFn: () => playlists.getAll(),
   });
 
-  const filteredPlaylists = playlistsList.filter(playlist =>
+  const filteredPlaylists = playlistsList.filter((playlist) =>
     playlist.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -53,7 +53,7 @@ export default function PlaylistsPage() {
               >
                 <a href={`/playlists/${playlist.id}`}>
                   <div className="aspect-square relative">
-                    <img
+                    <Image
                       src={playlist.image}
                       alt={playlist.title}
                       className="w-full h-full object-cover"
@@ -75,4 +75,4 @@ export default function PlaylistsPage() {
       </div>
     </LayoutContent>
   );
-} 
+}

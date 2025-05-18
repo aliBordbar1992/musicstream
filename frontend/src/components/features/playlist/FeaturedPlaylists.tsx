@@ -1,4 +1,6 @@
-import { motion } from 'framer-motion';
+import { motion } from "framer-motion";
+import Link from "next/link";
+import Image from "next/image";
 
 interface Playlist {
   id: number;
@@ -11,12 +13,21 @@ interface FeaturedPlaylistsProps {
   playlists: Playlist[];
 }
 
-export default function FeaturedPlaylists({ playlists }: FeaturedPlaylistsProps) {
+export default function FeaturedPlaylists({
+  playlists,
+}: FeaturedPlaylistsProps) {
   return (
     <section className="mb-12">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-neutral-900 dark:text-white">Featured Playlists</h2>
-        <a href="/playlists" className="text-primary-600 hover:underline font-medium">View All</a>
+        <h2 className="text-2xl font-bold text-neutral-900 dark:text-white">
+          Featured Playlists
+        </h2>
+        <Link
+          href="/playlists"
+          className="text-primary-600 hover:underline font-medium"
+        >
+          View All
+        </Link>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {playlists.map((playlist) => (
@@ -28,9 +39,10 @@ export default function FeaturedPlaylists({ playlists }: FeaturedPlaylistsProps)
             className="bg-white dark:bg-neutral-800 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow"
           >
             <div className="aspect-square relative">
-              <img
+              <Image
                 src={playlist.image}
                 alt={playlist.title}
+                fill={true}
                 className="w-full h-full object-cover"
               />
             </div>
@@ -47,4 +59,4 @@ export default function FeaturedPlaylists({ playlists }: FeaturedPlaylistsProps)
       </div>
     </section>
   );
-} 
+}

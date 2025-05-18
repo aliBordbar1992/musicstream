@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ThemeProvider } from '@/components/ThemeProvider';
-import { PlayerProvider } from '@/context/PlayerContext';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { QueueSidebarProvider } from '@/context/QueueSidebarContext';
-import { QueueProvider } from '@/context/QueueContext';
-import { useState } from 'react';
-import { Toaster } from 'react-hot-toast';
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ThemeProvider } from "@/components/layouts/ThemeProvider";
+import { PlayerProvider } from "@/store/PlayerContext";
+import { AuthProvider } from "@/store/AuthContext";
+import { QueueSidebarProvider } from "@/store/QueueSidebarContext";
+import { QueueProvider } from "@/store/QueueContext";
+import { useState } from "react";
+import { Toaster } from "react-hot-toast";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -34,9 +34,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         >
           <PlayerProvider>
             <QueueProvider>
-              <QueueSidebarProvider>
-                {children}
-              </QueueSidebarProvider>
+              <QueueSidebarProvider>{children}</QueueSidebarProvider>
             </QueueProvider>
           </PlayerProvider>
           <Toaster
@@ -44,9 +42,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
             toastOptions={{
               duration: 3000,
               style: {
-                background: 'var(--background)',
-                color: 'var(--foreground)',
-                border: '1px solid var(--border)',
+                background: "var(--background)",
+                color: "var(--foreground)",
+                border: "1px solid var(--border)",
               },
             }}
           />
@@ -54,4 +52,4 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       </AuthProvider>
     </QueryClientProvider>
   );
-} 
+}

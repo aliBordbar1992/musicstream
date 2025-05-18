@@ -4,13 +4,13 @@ import { useState, useRef, useCallback } from "react";
 import { music } from "@/lib/api";
 import toast from "react-hot-toast";
 import axios from "axios";
-import { usePlayer } from "@/context/PlayerContext";
+import { usePlayer } from "@/store/PlayerContext";
 import Input from "@/components/ui/Input";
 import ArtistSearch from "@/components/ui/ArtistSearch";
-import ConfirmModal from "@/components/ConfirmModal";
-import { SongItem } from "@/components/SongItem";
+import ConfirmModal from "@/components/common/ConfirmModal";
+import { SongItem } from "@/components/features/music/SongItem";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { LayoutContent } from "@/components/LayoutContent";
+import { LayoutContent } from "@/components/layouts/LayoutContent";
 import { Trash2 } from "lucide-react";
 
 interface Music {

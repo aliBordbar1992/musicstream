@@ -1,28 +1,30 @@
-'use client';
+"use client";
 
-import { useAuth } from '@/contexts/AuthContext';
-import { useForm } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import toast from 'react-hot-toast';
-import Input from '@/components/ui/Input';
+import { useAuth } from "@/store/AuthContext";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import toast from "react-hot-toast";
+import Input from "@/components/ui/Input";
 
-const schema = yup.object({
-  username: yup
-    .string()
-    .required('Username is required')
-    .min(3, 'Username must be at least 3 characters'),
-  password: yup
-    .string()
-    .required('Password is required')
-    .min(6, 'Password must be at least 6 characters'),
-  confirmPassword: yup
-    .string()
-    .required('Please confirm your password')
-    .oneOf([yup.ref('password')], 'Passwords must match'),
-}).required();
+const schema = yup
+  .object({
+    username: yup
+      .string()
+      .required("Username is required")
+      .min(3, "Username must be at least 3 characters"),
+    password: yup
+      .string()
+      .required("Password is required")
+      .min(6, "Password must be at least 6 characters"),
+    confirmPassword: yup
+      .string()
+      .required("Please confirm your password")
+      .oneOf([yup.ref("password")], "Passwords must match"),
+  })
+  .required();
 
 type RegisterFormData = yup.InferType<typeof schema>;
 
@@ -40,10 +42,10 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterFormData) => {
     try {
       await registerUser(data.username, data.password);
-      toast.success('Registration successful! Please login.');
-      router.push('/login');
+      toast.success("Registration successful! Please login.");
+      router.push("/login");
     } catch {
-      toast.error('Registration failed. Username may already be taken.');
+      toast.error("Registration failed. Username may already be taken.");
     }
   };
 
@@ -55,7 +57,7 @@ export default function RegisterPage() {
           id="username"
           label="Username"
           type="text"
-          {...register('username')}
+          {...register("username")}
           error={errors.username?.message}
         />
 
@@ -63,7 +65,7 @@ export default function RegisterPage() {
           id="password"
           label="Password"
           type="password"
-          {...register('password')}
+          {...register("password")}
           error={errors.password?.message}
         />
 
@@ -71,7 +73,7 @@ export default function RegisterPage() {
           id="confirmPassword"
           label="Confirm Password"
           type="password"
-          {...register('confirmPassword')}
+          {...register("confirmPassword")}
           error={errors.confirmPassword?.message}
         />
 
@@ -80,16 +82,19 @@ export default function RegisterPage() {
           disabled={isSubmitting}
           className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
         >
-          {isSubmitting ? 'Registering...' : 'Register'}
+          {isSubmitting ? "Registering..." : "Register"}
         </button>
       </form>
 
       <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
-        Already have an account?{' '}
-        <Link href="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+        Already have an account?{" "}
+        <Link
+          href="/login"
+          className="font-medium text-indigo-600 hover:text-indigo-500"
+        >
           Login here
         </Link>
       </p>
     </div>
   );
-} 
+}

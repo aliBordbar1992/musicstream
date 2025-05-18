@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useCallback } from "react";
-import { formatDuration } from "../utils/formatDuration";
+import { formatDuration } from "@/utils/formatDuration";
 import Image from "next/image";
 
 interface SongItemProps {

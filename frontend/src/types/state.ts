@@ -1,4 +1,4 @@
-import { Queue, QueueItem } from "./domain";
+import { Queue } from "./domain";
 import { PlayerTrack } from "./domain";
 
 // Queue state types
