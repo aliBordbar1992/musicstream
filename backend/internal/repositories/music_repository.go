@@ -59,7 +59,7 @@ func (r *musicRepository) FindByArtist(artistID uint) ([]*domain.Music, error) {
 func (r *musicRepository) FindByTitle(title string) ([]*domain.Music, error) {
 	var music []*domain.Music
 	search := "%" + strings.ReplaceAll(title, "%", "\\%") + "%"
-	err := r.db.Preload("Artist").Where("title LIKE ?", search).Find(&music).Error
+	err := r.db.Preload("Artist").Where("title ILIKE ?", search).Find(&music).Error
 	return music, err
 }
 

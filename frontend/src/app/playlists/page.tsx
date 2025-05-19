@@ -10,6 +10,7 @@ import Link from "next/link";
 import { MusicalNoteIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { Playlist } from "@/types/domain";
 import Button from "@/components/ui/Button";
+import { Loading } from "@/components/ui/Loading";
 
 interface EmptyStateProps {
   searchQuery: string;
@@ -99,9 +100,7 @@ export default function PlaylistsPage() {
         </div>
 
         {isLoading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-          </div>
+          <Loading className="h-64" />
         ) : filteredPlaylists.length === 0 ? (
           <EmptyState
             searchQuery={searchQuery}

@@ -1,4 +1,5 @@
 import { ButtonHTMLAttributes, forwardRef } from "react";
+import { Loading } from "./Loading";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "danger";
@@ -52,7 +53,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {isLoading ? (
           <div className="mr-2">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
+            <Loading size="sm" />
           </div>
         ) : null}
         {children}

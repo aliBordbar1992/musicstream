@@ -1,15 +1,16 @@
 import { DraggableAttributes } from "@dnd-kit/core";
 import { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 import { InputHTMLAttributes } from "react";
-import { Song } from "./domain";
+import { Music } from "./domain";
 
-export interface SongItemProps extends Song {
+export interface SongItemProps {
+  song: Music;
   onPlay?: () => void;
   onAddToQueue?: () => void;
 }
 
 // Sortable song item types
-export interface SortableSong extends Song {
+export interface SortableSong extends Music {
   index: number;
 }
 

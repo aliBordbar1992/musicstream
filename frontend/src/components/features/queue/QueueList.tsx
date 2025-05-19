@@ -16,6 +16,7 @@ import {
 } from "@dnd-kit/sortable";
 import { SortableSongItem } from "./SortableSongItem";
 import { useQueueManagement } from "@/hooks/useQueueManagement";
+import { Loading } from "@/components/ui/Loading";
 
 // Domain types
 interface QueueItem {
@@ -45,11 +46,7 @@ const sortQueueItems = (items: QueueItem[]): QueueItem[] => {
 // Pure component for loading state
 const LoadingState = memo(() => (
   <div className="p-4">
-    <div className="animate-pulse space-y-4">
-      {[...Array(5)].map((_, i) => (
-        <div key={i} className="h-16 bg-gray-200 rounded-lg" />
-      ))}
-    </div>
+    <Loading size="lg" />
   </div>
 ));
 

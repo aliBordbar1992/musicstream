@@ -4,10 +4,11 @@ import { useEffect } from "react";
 import { SongItem } from "./SongItem";
 import { music } from "@/lib/api";
 import { useDataFetching } from "@/hooks/useDataFetching";
-import { Song } from "@/types/domain";
+import { Music } from "@/types/domain";
+import { Loading } from "@/components/ui/Loading";
 
 export default function RecentlyPlayed() {
-  const { data: songs, loading, error, fetchData } = useDataFetching<Song[]>();
+  const { data: songs, loading, error, fetchData } = useDataFetching<Music[]>();
 
   useEffect(() => {
     fetchData(
@@ -17,13 +18,7 @@ export default function RecentlyPlayed() {
   }, [fetchData]);
 
   if (loading) {
-    return (
-      <div className="animate-pulse">
-        <div className="h-8 bg-gray-200 rounded w-full mb-2"></div>
-        <div className="h-8 bg-gray-200 rounded w-full mb-2"></div>
-        <div className="h-8 bg-gray-200 rounded w-full"></div>
-      </div>
-    );
+    return <Loading className="h-64" />;
   }
 
   if (error) {
@@ -40,7 +35,7 @@ export default function RecentlyPlayed() {
     <div className="space-y-2">
       {songs.map((song) => (
         <SongItem
-          key={`${song.id}-${song.played_at}`}
+          key={`${song.id}-${song.title}`}
           song={song}
           onPlay={(song) => {
             // TODO: Implement play functionality

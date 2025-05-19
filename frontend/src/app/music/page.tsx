@@ -11,8 +11,8 @@ import ConfirmModal from "@/components/common/ConfirmModal";
 import { SongItem } from "@/components/features/music/SongItem";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { LayoutContent } from "@/components/layouts/LayoutContent";
-import { Trash2 } from "lucide-react";
 import Button from "@/components/ui/Button";
+import { Loading } from "@/components/ui/Loading";
 
 interface Music {
   id: number;
@@ -206,7 +206,7 @@ export default function MusicPage() {
         <div className="bg-white dark:bg-neutral-800 shadow overflow-hidden sm:rounded-md">
           <div className="space-y-2 p-4">
             {isLoading ? (
-              <div>Loading...</div>
+              <Loading className="h-64" />
             ) : (
               tracks.map((track: Music) => (
                 <div
@@ -218,18 +218,15 @@ export default function MusicPage() {
                       song={{
                         id: track.id,
                         title: track.title,
-                        artist: track.artist.name,
+                        artist: track.artist,
                         duration: track.duration,
+                        url: music.stream(track.id),
                       }}
                       onPlay={() => handlePlayTrack(track)}
+                      onRemove={() => handleDeleteClick(track)}
+                      showRemoveButton={true}
                     />
                   </div>
-                  <button
-                    className="ml-4 p-2 text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                    onClick={() => handleDeleteClick(track)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
                 </div>
               ))
             )}

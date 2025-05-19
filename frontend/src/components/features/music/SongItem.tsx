@@ -3,12 +3,13 @@
 import { memo, useCallback } from "react";
 import { formatDuration } from "@/utils/formatDuration";
 import Image from "next/image";
-import { Song } from "@/types/domain";
+import { Music } from "@/types/domain";
+import { Trash2 } from "lucide-react";
 
 interface SongItemProps {
-  song: Song;
-  onPlay: (song: Song) => void;
-  onRemove?: (song: Song) => void;
+  song: Music;
+  onPlay: (song: Music) => void;
+  onRemove?: (song: Music) => void;
   showImage?: boolean;
   className?: string;
   showRemoveButton?: boolean;
@@ -69,7 +70,7 @@ export const SongItem = memo(function SongItem({
             {song.title}
           </h3>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            {song.artist}
+            {typeof song.artist === "string" ? song.artist : song.artist.name}
           </p>
         </div>
         {song.album && (
@@ -77,29 +78,15 @@ export const SongItem = memo(function SongItem({
             {song.album}
           </div>
         )}
-        {song.duration !== undefined && (
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            {formatDuration(song.duration)}
-          </div>
-        )}
+        <div className="text-sm text-gray-500 dark:text-gray-400">
+          {formatDuration(song.duration)}
+        </div>
         {showRemoveButton && onRemove && (
           <button
+            className="ml-4 p-2 text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
             onClick={handleRemove}
-            className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-neutral-700 transition-colors"
           >
-            <svg
-              className="w-5 h-5 text-gray-600 dark:text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <Trash2 className="w-4 h-4" />
           </button>
         )}
       </div>

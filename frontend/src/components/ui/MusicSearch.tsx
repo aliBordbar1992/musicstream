@@ -3,6 +3,8 @@ import { music } from "@/lib/api";
 import Input from "./Input";
 import { Music } from "@/types/domain";
 import Image from "next/image";
+import { Loading } from "./Loading";
+
 interface MusicSearchProps {
   value: string;
   onChange: (value: string) => void;
@@ -88,8 +90,8 @@ export default function MusicSearch({
       {isOpen && value && (
         <div className="absolute z-10 w-full mt-1 bg-white dark:bg-neutral-800 shadow-lg rounded-md border border-gray-200 dark:border-neutral-700 max-h-60 overflow-auto">
           {loading ? (
-            <div className="p-2 text-center text-gray-500 dark:text-gray-400">
-              Loading...
+            <div className="p-2 text-center">
+              <Loading size="sm" />
             </div>
           ) : songs.length > 0 ? (
             <ul>

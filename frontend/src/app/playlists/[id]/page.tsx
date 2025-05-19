@@ -10,10 +10,10 @@ import { LayoutContent } from "@/components/layouts/LayoutContent";
 import MusicSearch from "@/components/ui/MusicSearch";
 import Button from "@/components/ui/Button";
 import { use } from "react";
-import { Trash2 } from "lucide-react";
 import { SongItem } from "@/components/features/music/SongItem";
 import { Music, Playlist } from "@/types/domain";
 import { usePlayer } from "@/store/PlayerContext";
+import { Loading } from "@/components/ui/Loading";
 
 type ParamsType = { id: string } | Promise<{ id: string }>;
 
@@ -137,9 +137,7 @@ export default function PlaylistPage({ params }: { params: ParamsType }) {
     <LayoutContent>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {isLoading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-          </div>
+          <Loading className="h-64" />
         ) : !playlist ? (
           <div className="max-w-lg mx-auto mt-24 bg-white dark:bg-neutral-800 rounded-xl shadow-lg p-8 flex flex-col items-center">
             <div className="mb-4">
@@ -237,23 +235,15 @@ export default function PlaylistPage({ params }: { params: ParamsType }) {
                           song={{
                             id: song.id,
                             title: song.title,
-                            artist:
-                              typeof song.artist === "string"
-                                ? song.artist
-                                : song.artist?.name,
+                            artist: song.artist,
                             duration: song.duration,
+                            url: music.stream(song.id),
                           }}
                           onPlay={() => handlePlayTrack(song)}
+                          onRemove={() => handleRemoveSong(song.id)}
+                          showRemoveButton={playlist.is_owner}
                         />
                       </div>
-                      {playlist.is_owner && (
-                        <button
-                          className="ml-4 p-2 text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                          onClick={() => handleRemoveSong(song.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
                     </div>
                   ))
                 ) : (

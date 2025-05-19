@@ -2,8 +2,8 @@
 export interface Music {
   id: number;
   title: string;
-  artistName: string;
   artist: Artist;
+  album?: string;
   duration: number;
   url: string;
   image?: string;
