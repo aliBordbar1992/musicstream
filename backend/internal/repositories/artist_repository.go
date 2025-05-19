@@ -37,7 +37,7 @@ func (r *artistRepository) FindByName(name string) (*domain.Artist, error) {
 
 func (r *artistRepository) Search(query string) ([]*domain.Artist, error) {
 	var artists []*domain.Artist
-	err := r.db.Where("name ILIKE ?", "%"+query+"%").Find(&artists).Error
+	err := r.db.Where("name LIKE ?", "%"+query+"%").Find(&artists).Error
 	return artists, err
 }
 

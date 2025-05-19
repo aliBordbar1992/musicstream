@@ -74,6 +74,7 @@ func RegisterRoutes(r *gin.Engine) {
 	r.GET("/music/:id", AuthMiddleware(), musicController.GetMusic)
 	r.GET("/music/:id/stream", AuthMiddleware(), musicController.StreamMusic)
 	r.GET("/music", AuthMiddleware(), musicController.ListMusic)
+	r.GET("/music/search", AuthMiddleware(), musicController.SearchMusic)
 	r.DELETE("/music/:id", AuthMiddleware(), musicController.DeleteMusic)
 
 	// Playlist routes

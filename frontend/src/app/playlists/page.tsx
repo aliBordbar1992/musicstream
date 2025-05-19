@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { playlists } from "@/lib/api";
 import { LayoutContent } from "@/components/layouts/LayoutContent";
 import Image from "next/image";
+import Link from "next/link";
 import { MusicalNoteIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { Playlist } from "@/types/domain";
 import Button from "@/components/ui/Button";
@@ -98,7 +99,9 @@ export default function PlaylistsPage() {
         </div>
 
         {isLoading ? (
-          <div>Loading...</div>
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+          </div>
         ) : filteredPlaylists.length === 0 ? (
           <EmptyState
             searchQuery={searchQuery}
@@ -114,7 +117,7 @@ export default function PlaylistsPage() {
                 whileHover={{ scale: 1.02 }}
                 className="bg-white dark:bg-neutral-800 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow"
               >
-                <a href={`/playlists/${playlist.id}`}>
+                <Link href={`/playlists/${playlist.id}`}>
                   <div className="aspect-square relative">
                     <Image
                       src="https://placehold.co/600x400/png"
@@ -128,7 +131,7 @@ export default function PlaylistsPage() {
                       {playlist.name}
                     </h3>
                   </div>
-                </a>
+                </Link>
               </motion.div>
             ))}
           </div>

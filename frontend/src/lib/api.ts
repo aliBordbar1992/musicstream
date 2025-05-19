@@ -84,11 +84,10 @@ export const music = {
     return response.data;
   },
   search: async (query: string): Promise<Music[]> => {
-    const response = await fetch(
-      `${API_URL}/music/search?q=${encodeURIComponent(query)}`
-    );
-    if (!response.ok) throw new Error("Failed to search music");
-    return response.json();
+    const response = await api.get("/music/search", {
+      params: { q: query },
+    });
+    return response.data;
   },
 };
 
@@ -110,7 +109,7 @@ export const playlists = {
   },
   addSong: async (playlistId: number, songId: number) => {
     const response = await api.post(`/playlists/${playlistId}/songs`, {
-      songId,
+      music_id: songId,
     });
     return response.data;
   },

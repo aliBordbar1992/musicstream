@@ -81,3 +81,14 @@ func (c *MusicController) DeleteMusic(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{"message": "Music deleted successfully"})
 }
+
+func (c *MusicController) SearchMusic(ctx *gin.Context) {
+	query := ctx.Query("q")
+	music, err := c.musicService.SearchMusic(query)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to search music"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, music)
+}

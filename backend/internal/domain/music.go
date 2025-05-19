@@ -34,6 +34,7 @@ type MusicRepository interface {
 	Delete(id uint) error
 	FindByUploader(username string) ([]*Music, error)
 	FindByArtist(artistID uint) ([]*Music, error)
+	FindByTitle(title string) ([]*Music, error)
 	GetFilePath(id uint) (string, error)
 }
 
@@ -43,6 +44,7 @@ type MusicService interface {
 	GetMusic(id uint) (*Music, error)
 	ListAllMusic() ([]*Music, error)
 	DeleteMusic(id uint) error
+	SearchMusic(query string) ([]*Music, error)
 	GetUserMusic(username string) ([]*Music, error)
 	GetMusicByArtist(artistID uint) ([]*Music, error)
 }

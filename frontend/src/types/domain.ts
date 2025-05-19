@@ -2,10 +2,16 @@
 export interface Music {
   id: number;
   title: string;
-  artist: string;
+  artistName: string;
+  artist: Artist;
   duration: number;
   url: string;
   image?: string;
+}
+
+export interface Artist {
+  id: number;
+  name: string;
 }
 
 export interface Song {
@@ -56,5 +62,5 @@ export interface Playlist {
   createdBy: string;
   createdAt: string; // ISO date string
   songs?: Music[]; // Optional since it's omitted in some cases
-  isOwner: boolean;
+  is_owner: boolean;
 }

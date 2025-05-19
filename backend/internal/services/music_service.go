@@ -78,3 +78,7 @@ func (s *musicService) GetUserMusic(username string) ([]*domain.Music, error) {
 func (s *musicService) GetMusicByArtist(artistID uint) ([]*domain.Music, error) {
 	return s.musicRepo.FindByArtist(artistID)
 }
+
+func (s *musicService) SearchMusic(query string) ([]*domain.Music, error) {
+	return s.musicRepo.FindByTitle(query)
+}

@@ -62,6 +62,7 @@ func (r *playlistRepository) GetSongs(playlistID uint) ([]*domain.Music, error) 
 	var songs []*domain.Music
 	err := r.db.Joins("JOIN playlist_musics ON playlist_musics.music_id = musics.id").
 		Where("playlist_musics.playlist_id = ?", playlistID).
+		Preload("Artist").
 		Find(&songs).Error
 	if err != nil {
 		return nil, err

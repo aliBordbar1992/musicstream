@@ -110,7 +110,7 @@ export default function MusicSearch({
                     <div>
                       <div className="font-medium">{song.title}</div>
                       <div className="text-sm text-gray-500 dark:text-gray-400">
-                        {song.artist}
+                        {song.artist.name}
                       </div>
                     </div>
                   </div>

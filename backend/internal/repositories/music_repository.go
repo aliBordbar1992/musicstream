@@ -1,6 +1,8 @@
 package repositories
 
 import (
+	"strings"
+
 	"github.com/aliBordbar1992/musicstream-backend/internal/domain"
 	"gorm.io/gorm"
 )
@@ -51,6 +53,13 @@ func (r *musicRepository) FindByUploader(username string) ([]*domain.Music, erro
 func (r *musicRepository) FindByArtist(artistID uint) ([]*domain.Music, error) {
 	var music []*domain.Music
 	err := r.db.Preload("Artist").Where("artist_id = ?", artistID).Find(&music).Error
+	return music, err
+}
+
+func (r *musicRepository) FindByTitle(title string) ([]*domain.Music, error) {
+	var music []*domain.Music
+	search := "%" + strings.ReplaceAll(title, "%", "\\%") + "%"
+	err := r.db.Preload("Artist").Where("title LIKE ?", search).Find(&music).Error
 	return music, err
 }
 

@@ -66,7 +66,7 @@ export const useQueueManagement = (): [
         setCurrentTrack({
           id: nextItem.music.id,
           title: nextItem.music.title,
-          artist: nextItem.music.artist,
+          artist: nextItem.music.artistName,
           duration: nextItem.music.duration,
           url: `/api/music/${nextItem.music.id}/stream`,
         });
@@ -104,7 +104,7 @@ export const useQueueManagement = (): [
         setCurrentTrack({
           id: item.music.id,
           title: item.music.title,
-          artist: item.music.artist,
+          artist: item.music.artistName,
           duration: item.music.duration,
           url: `/api/music/${item.music.id}/stream`,
         });
