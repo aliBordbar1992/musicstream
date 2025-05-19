@@ -103,8 +103,12 @@ func (s *uploadService) HandleMusicDownload(ctx *gin.Context, fileService FileSe
 
 	linkValidator := domain.NewLinkValidator(&http.Client{})
 
+	// Generate unique filename
+	filename := fmt.Sprintf("%d_%s.%s", time.Now().UnixNano(), req.Title, filepath.Ext(req.URL))
+	filePath := filepath.Join(s.uploadDir, filename)
+
 	// Download the file
-	filePath, err := fileService.DownloadFile(req.URL, s.uploadDir, linkValidator)
+	_, err := fileService.DownloadFile(req.URL, filePath, linkValidator)
 	if err != nil {
 		return nil, fmt.Errorf("failed to download music: %w", err)
 	}

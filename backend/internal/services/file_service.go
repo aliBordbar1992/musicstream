@@ -99,6 +99,44 @@ func (s *fileService) DeleteFile(filePath string) error {
 	return nil
 }
 
+// downloadChunk downloads a chunk of the file
+func (s *fileService) downloadChunk(url string, start, end int64, file *os.File) error {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// Set range header for chunked download
+	req.Header.Set("Range", fmt.Sprintf("bytes=%d-%d", start, end))
+
+	// Create a client with a longer timeout for chunk downloads
+	client := &http.Client{
+		Timeout: 5 * time.Minute, // 5 minutes timeout for each chunk
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to download chunk: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusPartialContent && resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	// Seek to the correct position in the file
+	if _, err := file.Seek(start, 0); err != nil {
+		return fmt.Errorf("failed to seek in file: %w", err)
+	}
+
+	// Copy the chunk to the file
+	if _, err := io.Copy(file, resp.Body); err != nil {
+		return fmt.Errorf("failed to write chunk: %w", err)
+	}
+
+	return nil
+}
+
 // DownloadFile downloads a file from the provided URL
 func (s *fileService) DownloadFile(url string, filePath string, linkValidator domain.LinkValidator) (string, error) {
 	// Validate the URL
@@ -106,12 +144,26 @@ func (s *fileService) DownloadFile(url string, filePath string, linkValidator do
 		return "", fmt.Errorf("invalid music URL: %w", err)
 	}
 
-	// Download the file
-	resp, err := s.client.Get(url)
+	// Get file size
+	req, err := http.NewRequest("HEAD", url, nil)
 	if err != nil {
-		return "", fmt.Errorf("failed to download file: %w", err)
+		return "", fmt.Errorf("failed to create request: %w", err)
+	}
+
+	resp, err := s.client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("failed to get file size: %w", err)
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("failed to get file size: status code %d", resp.StatusCode)
+	}
+
+	contentLength := resp.ContentLength
+	if contentLength <= 0 {
+		return "", fmt.Errorf("invalid content length")
+	}
 
 	// Create the file
 	file, err := os.Create(filePath)
@@ -120,10 +172,31 @@ func (s *fileService) DownloadFile(url string, filePath string, linkValidator do
 	}
 	defer file.Close()
 
-	// Copy the file content
-	if _, err := io.Copy(file, resp.Body); err != nil {
-		os.Remove(filePath) // Clean up the file
-		return "", fmt.Errorf("failed to save file: %w", err)
+	// Define chunk size (5MB)
+	chunkSize := int64(5 * 1024 * 1024)
+	maxRetries := 3
+
+	// Download in chunks
+	for start := int64(0); start < contentLength; start += chunkSize {
+		end := start + chunkSize - 1
+		if end >= contentLength {
+			end = contentLength - 1
+		}
+
+		var lastErr error
+		for retry := 0; retry < maxRetries; retry++ {
+			err := s.downloadChunk(url, start, end, file)
+			if err == nil {
+				break
+			}
+			lastErr = err
+			time.Sleep(time.Second * time.Duration(retry+1)) // Exponential backoff
+		}
+
+		if lastErr != nil {
+			os.Remove(filePath) // Clean up the file
+			return "", fmt.Errorf("failed to download chunk after %d retries: %w", maxRetries, lastErr)
+		}
 	}
 
 	return filePath, nil

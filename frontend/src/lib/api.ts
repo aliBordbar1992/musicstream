@@ -89,6 +89,15 @@ export const music = {
     });
     return response.data;
   },
+  downloadFromUrl: async (data: {
+    url: string;
+    title: string;
+    artist: string;
+    album?: string;
+  }) => {
+    const response = await api.post("/music/download", data);
+    return response.data;
+  },
 };
 
 export const playlists = {
