@@ -12,6 +12,7 @@ export interface QueueContextType {
   addToQueue: (musicId: number, type: "next" | "queue") => Promise<void>;
   removeFromQueue: (itemId: number) => Promise<void>;
   clearQueue: () => Promise<void>;
+  updateQueueItemPosition: (itemId: number, position: number) => Promise<void>;
 }
 
 // Player context types

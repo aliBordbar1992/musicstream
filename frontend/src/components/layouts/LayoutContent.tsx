@@ -11,11 +11,8 @@ export function LayoutContent({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-col min-h-screen">
       <Navigation />
-      <div
-        className="flex w-full"
-        style={{ height: "calc(100vh - 4rem - 5rem)" }}
-      >
-        <main className="flex-1 h-full">{children}</main>
+      <div className="flex flex-1 pt-16">
+        <main className="flex-1 overflow-y-auto">{children}</main>
         <QueueSidebar isOpen={isOpen} onClose={close} />
       </div>
     </div>

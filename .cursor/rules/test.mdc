@@ -36,7 +36,7 @@ alwaysApply: true
 
 ## Data Fetching
 - Use React Query for all API calls
-- Use api.ts to implement API endpoints
+- Use the centralized lib/api.ts for all API calls
 - Implement proper caching strategies
 - Handle loading and error states
 - Use optimistic updates where appropriate

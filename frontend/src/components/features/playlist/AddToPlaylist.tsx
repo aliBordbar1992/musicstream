@@ -1,9 +1,10 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { playlists } from '@/lib/api';
-import toast from 'react-hot-toast';
-import axios from 'axios';
+import { useState, useEffect } from "react";
+import { playlists } from "@/lib/api";
+import toast from "react-hot-toast";
+import axios from "axios";
+import Button from "@/components/ui/Button";
 
 interface Playlist {
   id: number;
@@ -16,10 +17,13 @@ interface AddToPlaylistProps {
   onSuccess?: () => void;
 }
 
-export default function AddToPlaylist({ songId, onSuccess }: AddToPlaylistProps) {
+export default function AddToPlaylist({
+  songId,
+  onSuccess,
+}: AddToPlaylistProps) {
   const [playlistList, setPlaylistList] = useState<Playlist[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPlaylistId, setSelectedPlaylistId] = useState<number | ''>('');
+  const [selectedPlaylistId, setSelectedPlaylistId] = useState<number | "">("");
 
   useEffect(() => {
     loadPlaylists();
@@ -31,9 +35,11 @@ export default function AddToPlaylist({ songId, onSuccess }: AddToPlaylistProps)
       setPlaylistList((data as Playlist[]).filter((p: Playlist) => p.is_owner));
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        toast.error(error.response?.data?.message || 'Failed to load playlists');
+        toast.error(
+          error.response?.data?.message || "Failed to load playlists"
+        );
       } else {
-        toast.error('Failed to load playlists');
+        toast.error("Failed to load playlists");
       }
     } finally {
       setLoading(false);
@@ -46,14 +52,16 @@ export default function AddToPlaylist({ songId, onSuccess }: AddToPlaylistProps)
 
     try {
       await playlists.addSong(selectedPlaylistId, songId);
-      toast.success('Song added to playlist');
-      setSelectedPlaylistId('');
+      toast.success("Song added to playlist");
+      setSelectedPlaylistId("");
       onSuccess?.();
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        toast.error(error.response?.data?.message || 'Failed to add song to playlist');
+        toast.error(
+          error.response?.data?.message || "Failed to add song to playlist"
+        );
       } else {
-        toast.error('Failed to add song to playlist');
+        toast.error("Failed to add song to playlist");
       }
     }
   };
@@ -88,13 +96,9 @@ export default function AddToPlaylist({ songId, onSuccess }: AddToPlaylistProps)
           </option>
         ))}
       </select>
-      <button
-        type="submit"
-        disabled={!selectedPlaylistId}
-        className="px-3 py-1 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-      >
-        Add
-      </button>
+      <Button type="submit" isLoading={loading}>
+        {loading ? "Adding..." : "Add to Playlist"}
+      </Button>
     </form>
   );
-} 
+}

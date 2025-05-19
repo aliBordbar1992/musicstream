@@ -1,8 +1,9 @@
-'use client';
+"use client";
 
-import { Fragment } from 'react';
-import { Dialog, Transition } from '@headlessui/react';
-import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import { Fragment } from "react";
+import { Dialog, Transition } from "@headlessui/react";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
+import Button from "@/components/ui/Button";
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -20,8 +21,8 @@ export default function ConfirmModal({
   onConfirm,
   title,
   message,
-  confirmText = 'Delete',
-  cancelText = 'Cancel',
+  confirmText = "Delete",
+  cancelText = "Cancel",
 }: ConfirmModalProps) {
   return (
     <Transition.Root show={isOpen} as={Fragment}>
@@ -52,32 +53,32 @@ export default function ConfirmModal({
               <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white dark:bg-neutral-800 px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
                 <div className="sm:flex sm:items-start">
                   <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-900 sm:mx-0 sm:h-10 sm:w-10">
-                    <ExclamationTriangleIcon className="h-6 w-6 text-red-600 dark:text-red-400" aria-hidden="true" />
+                    <ExclamationTriangleIcon
+                      className="h-6 w-6 text-red-600 dark:text-red-400"
+                      aria-hidden="true"
+                    />
                   </div>
                   <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
-                    <Dialog.Title as="h3" className="text-base font-semibold leading-6 text-gray-900 dark:text-white">
+                    <Dialog.Title
+                      as="h3"
+                      className="text-base font-semibold leading-6 text-gray-900 dark:text-white"
+                    >
                       {title}
                     </Dialog.Title>
                     <div className="mt-2">
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{message}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {message}
+                      </p>
                     </div>
                   </div>
                 </div>
-                <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-                  <button
-                    type="button"
-                    className="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto"
-                    onClick={onConfirm}
-                  >
+                <div className="mt-4 flex justify-end gap-2">
+                  <Button variant="secondary" onClick={onClose}>
+                    Cancel
+                  </Button>
+                  <Button variant="danger" onClick={onConfirm}>
                     {confirmText}
-                  </button>
-                  <button
-                    type="button"
-                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white dark:bg-neutral-700 px-3 py-2 text-sm font-semibold text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-600 sm:mt-0 sm:w-auto"
-                    onClick={onClose}
-                  >
-                    {cancelText}
-                  </button>
+                  </Button>
                 </div>
               </Dialog.Panel>
             </Transition.Child>
@@ -86,4 +87,4 @@ export default function ConfirmModal({
       </Dialog>
     </Transition.Root>
   );
-} 
+}

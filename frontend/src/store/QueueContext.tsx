@@ -114,6 +114,17 @@ export function QueueProvider({ children }: { children: ReactNode }) {
     addToQueue,
     removeFromQueue,
     clearQueue,
+    updateQueueItemPosition: async (itemId: number, position: number) => {
+      try {
+        dispatch({ type: "SET_LOADING", payload: true });
+        await queueApi.updateItemPosition(itemId, position);
+        await fetchQueue();
+      } catch (err) {
+        dispatch({ type: "SET_ERROR", payload: handleApiError(err) });
+      } finally {
+        dispatch({ type: "SET_LOADING", payload: false });
+      }
+    },
   };
 
   return (

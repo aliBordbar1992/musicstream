@@ -3,31 +3,7 @@ import { useQueue } from "@/store/QueueContext";
 import { DragEndEvent } from "@dnd-kit/core";
 import { useAudioPlayer } from "./useAudioPlayer";
 import { usePlayer } from "@/store/PlayerContext";
-
-// Domain types
-export interface Music {
-  id: number;
-  title: string;
-  artist: {
-    id: number;
-    name: string;
-  };
-  album: string;
-  duration: number;
-}
-
-export interface QueueItem {
-  id: number;
-  music: Music;
-  position: number;
-  type: "next" | "queue";
-}
-
-export interface Queue {
-  id: number;
-  name: string;
-  items: QueueItem[];
-}
+import { Queue, QueueItem } from "@/types/domain";
 
 // Pure functions for queue operations
 const findItemIndex = (items: QueueItem[], itemId: number): number =>
@@ -52,7 +28,7 @@ export interface QueueManagementState {
 }
 
 export interface QueueManagementControls {
-  createQueue: () => Promise<void>;
+  createQueue: (name: string) => Promise<void>;
   updateQueueItemPosition: (itemId: number, newIndex: number) => Promise<void>;
   removeFromQueue: (itemId: number) => Promise<void>;
   handleDragEnd: (event: DragEndEvent) => Promise<void>;
@@ -90,7 +66,7 @@ export const useQueueManagement = (): [
         setCurrentTrack({
           id: nextItem.music.id,
           title: nextItem.music.title,
-          artist: nextItem.music.artist.name,
+          artist: nextItem.music.artist,
           duration: nextItem.music.duration,
           url: `/api/music/${nextItem.music.id}/stream`,
         });
@@ -128,7 +104,7 @@ export const useQueueManagement = (): [
         setCurrentTrack({
           id: item.music.id,
           title: item.music.title,
-          artist: item.music.artist.name,
+          artist: item.music.artist,
           duration: item.music.duration,
           url: `/api/music/${item.music.id}/stream`,
         });

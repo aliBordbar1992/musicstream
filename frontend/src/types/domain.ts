@@ -8,11 +8,22 @@ export interface Music {
   image?: string;
 }
 
+export interface Song {
+  id: number;
+  title: string;
+  artist: string;
+  album?: string;
+  duration?: number;
+  image?: string;
+  played_at?: string;
+}
+
 // Queue domain types
 export interface QueueItem {
   id: number;
   music: Music;
   type: "next" | "queue";
+  position: number;
 }
 
 export interface Queue {
@@ -36,4 +47,14 @@ export interface User {
   id: string;
   email: string;
   name: string;
+}
+
+// Playlist domain types
+export interface Playlist {
+  id: number;
+  name: string;
+  createdBy: string;
+  createdAt: string; // ISO date string
+  songs?: Music[]; // Optional since it's omitted in some cases
+  isOwner: boolean;
 }

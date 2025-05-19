@@ -8,6 +8,9 @@ import Link from "next/link";
 import ConfirmModal from "@/components/common/ConfirmModal";
 import { LayoutContent } from "@/components/layouts/LayoutContent";
 import { formatDuration } from "@/utils/formatDuration";
+import MusicSearch from "@/components/ui/MusicSearch";
+import Button from "@/components/ui/Button";
+import { use } from "react";
 
 interface Playlist {
   id: number;
@@ -24,8 +27,14 @@ interface Song {
   duration: number;
 }
 
-export default function PlaylistPage({ params }: { params: { id: string } }) {
-  const id = Array.isArray(params.id) ? params.id[0] : params.id;
+type ParamsType = { id: string } | Promise<{ id: string }>;
+
+function isPromise<T>(value: unknown): value is Promise<T> {
+  return typeof value === "object" && value !== null && "then" in value;
+}
+
+export default function PlaylistPage({ params }: { params: ParamsType }) {
+  const { id } = isPromise<{ id: string }>(params) ? use(params) : params;
   const [playlist, setPlaylist] = useState<Playlist | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentTrack, setCurrentTrack] = useState<Song | null>(null);
@@ -33,14 +42,13 @@ export default function PlaylistPage({ params }: { params: { id: string } }) {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [songToRemove, setSongToRemove] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [allSongs, setAllSongs] = useState<Song[]>([]);
   const [selectedSongId, setSelectedSongId] = useState<number | "">("");
   const [adding, setAdding] = useState(false);
+  const [selectedSongTitle, setSelectedSongTitle] = useState("");
 
   useEffect(() => {
     if (!id) return;
     loadPlaylist();
-    loadAllSongs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
@@ -60,25 +68,12 @@ export default function PlaylistPage({ params }: { params: { id: string } }) {
   const loadPlaylist = async () => {
     if (!id) return;
     try {
-      const data = await playlists.getById(parseInt(id));
+      const data = await playlists.getById(Number(id));
       setPlaylist(data);
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        toast.error(error.response?.data?.message || "Failed to load playlist");
-      } else {
-        toast.error("Failed to load playlist");
-      }
+    } catch (error) {
+      console.error("Failed to load playlist:", error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const loadAllSongs = async () => {
-    try {
-      const data = await music.getAll();
-      setAllSongs(data);
-    } catch {
-      // ignore for now
     }
   };
 
@@ -207,40 +202,51 @@ export default function PlaylistPage({ params }: { params: { id: string } }) {
           </Link>
         </div>
 
-        {/* Add Song Form */}
+        {/* Add Song Form and Back Button Row */}
         {playlist.is_owner && (
-          <form
-            onSubmit={handleAddSong}
-            className="mb-6 flex items-center gap-2"
-          >
-            <select
-              value={selectedSongId}
-              onChange={(e) => setSelectedSongId(Number(e.target.value))}
-              className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+          <div className="flex justify-between items-end mb-6 gap-4 w-full">
+            <form onSubmit={handleAddSong}>
+              <div className="flex items-end gap-2">
+                <div>
+                  <MusicSearch
+                    value={selectedSongTitle}
+                    onChange={setSelectedSongTitle}
+                    onMusicSelect={(song) => setSelectedSongId(song.id)}
+                    excludeIds={(playlist.songs ?? []).map((s) => s.id)}
+                  />
+                </div>
+                <div>
+                  <Button
+                    type="submit"
+                    disabled={!selectedSongId || adding}
+                    isLoading={adding}
+                  >
+                    {adding ? "Adding..." : "Add"}
+                  </Button>
+                </div>
+              </div>
+            </form>
+            <Link
+              href="/playlists"
+              className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-neutral-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-neutral-800"
             >
-              <option value="">Add a song...</option>
-              {allSongs
-                .filter(
-                  (song) =>
-                    !(playlist.songs ?? []).some((s) => s.id === song.id)
-                )
-                .map((song) => (
-                  <option key={song.id} value={song.id}>
-                    {song.title} -{" "}
-                    {typeof song.artist === "string"
-                      ? song.artist
-                      : song.artist?.name}
-                  </option>
-                ))}
-            </select>
-            <button
-              type="submit"
-              disabled={!selectedSongId || adding}
-              className="px-3 py-1 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-            >
-              {adding ? "Adding..." : "Add"}
-            </button>
-          </form>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-5 h-5 mr-2"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"
+                />
+              </svg>
+              Back to Playlists
+            </Link>
+          </div>
         )}
 
         <div className="bg-white dark:bg-neutral-800 shadow overflow-hidden sm:rounded-md">

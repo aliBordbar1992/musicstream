@@ -1,41 +1,20 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-import toast from 'react-hot-toast';
-import { SongItem } from './SongItem';
-
-interface Song {
-  id: number;
-  title: string;
-  artist: string;
-  album?: string;
-  duration?: number;
-  played_at: string;
-}
+import { useEffect } from "react";
+import { SongItem } from "./SongItem";
+import { music } from "@/lib/api";
+import { useDataFetching } from "@/hooks/useDataFetching";
+import { Song } from "@/types/domain";
 
 export default function RecentlyPlayed() {
-  const [songs, setSongs] = useState<Song[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: songs, loading, error, fetchData } = useDataFetching<Song[]>();
 
   useEffect(() => {
-    loadRecentlyPlayed();
-  }, []);
-
-  const loadRecentlyPlayed = async () => {
-    try {
-      const response = await axios.get('/recently-played');
-      setSongs(response.data);
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        toast.error(error.response?.data?.message || 'Failed to load recently played songs');
-      } else {
-        toast.error('Failed to load recently played songs');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+    fetchData(
+      () => music.getRecentlyPlayed(),
+      "Failed to load recently played songs"
+    );
+  }, [fetchData]);
 
   if (loading) {
     return (
@@ -47,11 +26,13 @@ export default function RecentlyPlayed() {
     );
   }
 
-  if (songs.length === 0) {
+  if (error) {
+    return <div className="text-sm text-red-500">{error}</div>;
+  }
+
+  if (!songs || songs.length === 0) {
     return (
-      <div className="text-sm text-gray-500">
-        No recently played songs
-      </div>
+      <div className="text-sm text-gray-500">No recently played songs</div>
     );
   }
 
@@ -60,17 +41,13 @@ export default function RecentlyPlayed() {
       {songs.map((song) => (
         <SongItem
           key={`${song.id}-${song.played_at}`}
-          id={song.id}
-          title={song.title}
-          artist={song.artist}
-          album={song.album}
-          duration={song.duration}
-          onPlay={() => {
+          song={song}
+          onPlay={(song) => {
             // TODO: Implement play functionality
-            console.log('Play song:', song.id);
+            console.log("Play song:", song.id);
           }}
         />
       ))}
     </div>
   );
-} 
+}

@@ -1,12 +1,7 @@
-import { Music } from "./domain";
 import { DraggableAttributes } from "@dnd-kit/core";
 import { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 import { InputHTMLAttributes } from "react";
-
-// Song item types
-export interface Song extends Music {
-  duration: number;
-}
+import { Song } from "./domain";
 
 export interface SongItemProps extends Song {
   onPlay?: () => void;

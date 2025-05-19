@@ -1,5 +1,6 @@
 import axios from "axios";
 import Cookies from "js-cookie";
+import { Music } from "@/types/domain";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
@@ -77,6 +78,17 @@ export const music = {
   createArtist: async (name: string) => {
     const response = await api.post("/artists", { name });
     return response.data;
+  },
+  getRecentlyPlayed: async () => {
+    const response = await api.get("/recently-played");
+    return response.data;
+  },
+  search: async (query: string): Promise<Music[]> => {
+    const response = await fetch(
+      `${API_URL}/music/search?q=${encodeURIComponent(query)}`
+    );
+    if (!response.ok) throw new Error("Failed to search music");
+    return response.json();
   },
 };
 

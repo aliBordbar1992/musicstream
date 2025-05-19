@@ -12,6 +12,7 @@ import { SongItem } from "@/components/features/music/SongItem";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { LayoutContent } from "@/components/layouts/LayoutContent";
 import { Trash2 } from "lucide-react";
+import Button from "@/components/ui/Button";
 
 interface Music {
   id: number;
@@ -197,13 +198,9 @@ export default function MusicPage() {
             </div>
           </div>
           <div className="flex justify-end">
-            <button
-              type="submit"
-              disabled={uploading}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-            >
-              {uploading ? "Uploading..." : "Upload Music"}
-            </button>
+            <Button type="submit" isLoading={uploading}>
+              {uploading ? "Uploading..." : "Upload"}
+            </Button>
           </div>
         </form>
         <div className="bg-white dark:bg-neutral-800 shadow overflow-hidden sm:rounded-md">
@@ -218,10 +215,12 @@ export default function MusicPage() {
                 >
                   <div className="flex-1">
                     <SongItem
-                      id={track.id}
-                      title={track.title}
-                      artist={track.artist.name}
-                      duration={track.duration}
+                      song={{
+                        id: track.id,
+                        title: track.title,
+                        artist: track.artist.name,
+                        duration: track.duration,
+                      }}
                       onPlay={() => handlePlayTrack(track)}
                     />
                   </div>

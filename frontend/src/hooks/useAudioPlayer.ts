@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import Cookies from "js-cookie";
-import { PlayerTrack } from "@/store/PlayerContext";
+import { PlayerTrack } from "@/types/domain";
 
 interface AudioPlayerState {
   volume: number;
@@ -177,7 +177,14 @@ export const useAudioPlayer = (
     return () => {
       isMounted.current = false;
     };
-  }, [currentTrack?.url, isPlaying, onPlayStateChange]);
+  }, [
+    currentTrack?.url,
+    currentTrack?.id,
+    isPlaying,
+    onPlayStateChange,
+    state.isMuted,
+    state.volume,
+  ]);
 
   // Handle play/pause state
   useEffect(() => {

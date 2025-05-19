@@ -3,43 +3,45 @@
 import { memo, useCallback } from "react";
 import { formatDuration } from "@/utils/formatDuration";
 import Image from "next/image";
+import { Song } from "@/types/domain";
 
 interface SongItemProps {
-  id: number;
-  title: string;
-  artist: string;
-  album?: string;
-  duration?: number;
-  image?: string;
-  onPlay: () => void;
+  song: Song;
+  onPlay: (song: Song) => void;
+  onRemove?: (song: Song) => void;
   showImage?: boolean;
   className?: string;
+  showRemoveButton?: boolean;
 }
 
 export const SongItem = memo(function SongItem({
-  title,
-  artist,
-  album,
-  duration,
-  image,
+  song,
   onPlay,
+  onRemove,
   showImage = false,
   className = "",
+  showRemoveButton = false,
 }: SongItemProps) {
   const handlePlay = useCallback(() => {
-    onPlay();
-  }, [onPlay]);
+    onPlay(song);
+  }, [onPlay, song]);
+
+  const handleRemove = useCallback(() => {
+    if (onRemove) {
+      onRemove(song);
+    }
+  }, [onRemove, song]);
 
   return (
     <div
       className={`flex items-center justify-between p-4 hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-lg group ${className}`}
     >
       <div className="flex items-center space-x-4 flex-1">
-        {showImage && image && (
+        {showImage && song.image && (
           <div className="w-16 h-16 rounded-lg flex-shrink-0">
             <Image
-              src={image}
-              alt={title}
+              src={song.image}
+              alt={song.title}
               className="w-full h-full object-cover"
             />
           </div>
@@ -64,19 +66,41 @@ export const SongItem = memo(function SongItem({
         </button>
         <div className="flex-1">
           <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-            {title}
+            {song.title}
           </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">{artist}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {song.artist}
+          </p>
         </div>
-        {album && (
+        {song.album && (
           <div className="text-sm text-gray-500 dark:text-gray-400">
-            {album}
+            {song.album}
           </div>
         )}
-        {duration !== undefined && (
+        {song.duration !== undefined && (
           <div className="text-sm text-gray-500 dark:text-gray-400">
-            {formatDuration(duration)}
+            {formatDuration(song.duration)}
           </div>
+        )}
+        {showRemoveButton && onRemove && (
+          <button
+            onClick={handleRemove}
+            className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-neutral-700 transition-colors"
+          >
+            <svg
+              className="w-5 h-5 text-gray-600 dark:text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
         )}
       </div>
     </div>
