@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"time"
@@ -14,6 +15,7 @@ import (
 
 type UploadService interface {
 	HandleMusicUpload(ctx *gin.Context, fileService FileService, musicService domain.MusicService) (*domain.Music, error)
+	HandleMusicDownload(ctx *gin.Context, fileService FileService, musicService domain.MusicService) (*domain.Music, error)
 }
 
 type uploadService struct {
@@ -81,6 +83,59 @@ func (s *uploadService) HandleMusicUpload(ctx *gin.Context, fileService FileServ
 	if err != nil {
 		os.Remove(filePath) // Clean up the file
 		return nil, fmt.Errorf("failed to save music record: %v", err)
+	}
+
+	return music, nil
+}
+
+// HandleMusicDownload handles downloading music from a URL
+func (s *uploadService) HandleMusicDownload(ctx *gin.Context, fileService FileService, musicService domain.MusicService) (*domain.Music, error) {
+	var req struct {
+		URL    string `json:"url" binding:"required"`
+		Title  string `json:"title" binding:"required"`
+		Artist string `json:"artist" binding:"required"`
+		Album  string `json:"album"`
+	}
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		return nil, fmt.Errorf("invalid request: %w", err)
+	}
+
+	linkValidator := domain.NewLinkValidator(&http.Client{})
+
+	// Download the file
+	filePath, err := fileService.DownloadFile(req.URL, s.uploadDir, linkValidator)
+	if err != nil {
+		return nil, fmt.Errorf("failed to download music: %w", err)
+	}
+
+	// Get file duration
+	duration, err := fileService.CalculateAudioDuration(filePath)
+	if err != nil {
+		os.Remove(filePath) // Clean up the file
+		return nil, fmt.Errorf("failed to get file duration: %v", err)
+	}
+
+	// Create or get artist
+	artistService := NewArtistService(repositories.NewArtistRepository(s.db))
+	artist, err := artistService.GetOrCreateArtist(req.Artist)
+	if err != nil {
+		os.Remove(filePath) // Clean up the file
+		return nil, fmt.Errorf("failed to process artist: %w", err)
+	}
+
+	// Create music record
+	music, err := musicService.UploadMusic(
+		req.Title,
+		artist.ID,
+		req.Album,
+		filePath,
+		ctx.GetString("username"),
+		duration,
+	)
+	if err != nil {
+		os.Remove(filePath) // Clean up the file
+		return nil, fmt.Errorf("failed to save music record: %w", err)
 	}
 
 	return music, nil

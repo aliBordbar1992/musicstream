@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/aliBordbar1992/musicstream-backend/internal/controllers"
+	"github.com/aliBordbar1992/musicstream-backend/internal/domain"
 	"github.com/aliBordbar1992/musicstream-backend/internal/repositories"
 	"github.com/aliBordbar1992/musicstream-backend/internal/services"
 	"github.com/aliBordbar1992/musicstream-backend/internal/utils"
@@ -52,9 +53,12 @@ func RegisterRoutes(r *gin.Engine) {
 	artistService := services.NewArtistService(artistRepo)
 	queueService := services.NewQueueService(queueRepo, musicRepo)
 
+	// Initialize link validator
+	linkValidator := domain.NewLinkValidator(&http.Client{})
+
 	// Initialize controllers
 	userController := controllers.NewUserController(userService)
-	musicController := controllers.NewMusicController(musicService, uploadService)
+	musicController := controllers.NewMusicController(musicService, uploadService, linkValidator)
 	playlistController := controllers.NewPlaylistController(playlistService)
 	artistController := controllers.NewArtistController(artistService)
 	queueController := controllers.NewQueueController(queueService)
@@ -71,6 +75,7 @@ func RegisterRoutes(r *gin.Engine) {
 
 	// Music routes
 	r.POST("/music/upload", AuthMiddleware(), musicController.UploadMusic)
+	r.POST("/music/download", AuthMiddleware(), musicController.DownloadMusicFromURL)
 	r.GET("/music/:id", AuthMiddleware(), musicController.GetMusic)
 	r.GET("/music/:id/stream", AuthMiddleware(), musicController.StreamMusic)
 	r.GET("/music", AuthMiddleware(), musicController.ListMusic)

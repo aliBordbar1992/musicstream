@@ -2,10 +2,14 @@ package services
 
 import (
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
+	"github.com/aliBordbar1992/musicstream-backend/internal/domain"
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/mp3"
 	"github.com/faiface/beep/vorbis"
@@ -14,6 +18,7 @@ import (
 
 // FileService handles file system operations
 type FileService interface {
+	DownloadFile(url string, filePath string, linkValidator domain.LinkValidator) (string, error)
 	SaveFile(filePath string, content []byte) error
 	CalculateAudioDuration(filePath string) (float64, error)
 	ValidateAudioFile(extension string) error
@@ -22,12 +27,16 @@ type FileService interface {
 }
 
 type fileService struct {
+	client            *http.Client
 	allowedExtensions map[string]bool
 }
 
 // NewFileService creates a new instance of FileService
 func NewFileService() FileService {
 	return &fileService{
+		client: &http.Client{
+			Timeout: 30 * time.Second,
+		},
 		allowedExtensions: map[string]bool{
 			".mp3": true,
 			".wav": true,
@@ -88,4 +97,34 @@ func (s *fileService) DeleteFile(filePath string) error {
 		return fmt.Errorf("failed to delete file: %v", err)
 	}
 	return nil
+}
+
+// DownloadFile downloads a file from the provided URL
+func (s *fileService) DownloadFile(url string, filePath string, linkValidator domain.LinkValidator) (string, error) {
+	// Validate the URL
+	if err := linkValidator.ValidateLink(url); err != nil {
+		return "", fmt.Errorf("invalid music URL: %w", err)
+	}
+
+	// Download the file
+	resp, err := s.client.Get(url)
+	if err != nil {
+		return "", fmt.Errorf("failed to download file: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Create the file
+	file, err := os.Create(filePath)
+	if err != nil {
+		return "", fmt.Errorf("failed to create file: %w", err)
+	}
+	defer file.Close()
+
+	// Copy the file content
+	if _, err := io.Copy(file, resp.Body); err != nil {
+		os.Remove(filePath) // Clean up the file
+		return "", fmt.Errorf("failed to save file: %w", err)
+	}
+
+	return filePath, nil
 }

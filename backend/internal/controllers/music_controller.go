@@ -11,13 +11,15 @@ import (
 type MusicController struct {
 	musicService  domain.MusicService
 	uploadService services.UploadService
+	linkValidator domain.LinkValidator
 }
 
 // NewMusicController creates a new instance of MusicController
-func NewMusicController(musicService domain.MusicService, uploadService services.UploadService) *MusicController {
+func NewMusicController(musicService domain.MusicService, uploadService services.UploadService, linkValidator domain.LinkValidator) *MusicController {
 	return &MusicController{
 		musicService:  musicService,
 		uploadService: uploadService,
+		linkValidator: linkValidator,
 	}
 }
 
@@ -91,4 +93,20 @@ func (c *MusicController) SearchMusic(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, music)
+}
+
+// DownloadMusicFromURL handles downloading music from a URL
+func (c *MusicController) DownloadMusicFromURL(ctx *gin.Context) {
+	fileService := services.NewFileService()
+
+	music, err := c.uploadService.HandleMusicDownload(ctx, fileService, c.musicService)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "Music downloaded successfully",
+		"music":   music,
+	})
 }
