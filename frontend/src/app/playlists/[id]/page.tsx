@@ -158,15 +158,37 @@ export default function PlaylistPage({ params }: { params: ParamsType }) {
 
   if (!playlist) {
     return (
-      <div className="text-center">
-        <h1 className="text-3xl font-bold mb-4">Playlist not found</h1>
-        <Link
-          href="/playlists"
-          className="text-indigo-600 hover:text-indigo-500"
-        >
-          Back to Playlists
-        </Link>
-      </div>
+      <LayoutContent>
+        <div className="max-w-lg mx-auto mt-24 bg-white dark:bg-neutral-800 rounded-xl shadow-lg p-8 flex flex-col items-center">
+          <div className="mb-4">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-12 w-12 text-gray-400 dark:text-gray-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={1.5}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"
+              />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold mb-2">Playlist Not Found</h1>
+          <p className="text-gray-500 dark:text-gray-400 mb-6 text-center">
+            Sorry, we couldn&apos;t find the playlist you were looking for. It
+            may have been deleted or the link is incorrect.
+          </p>
+          <Link
+            href="/playlists"
+            className="w-full max-w-xs inline-flex justify-center items-center px-4 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500 disabled:opacity-50"
+          >
+            Back to Playlists
+          </Link>
+        </div>
+      </LayoutContent>
     );
   }
 
