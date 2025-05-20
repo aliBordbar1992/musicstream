@@ -1,14 +1,45 @@
 package main
 
 import (
+	"context"
 	"log"
+	"os"
 
 	"github.com/aliBordbar1992/musicstream-backend/internal/domain"
+	"github.com/aliBordbar1992/musicstream-backend/internal/services"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
+
+var (
+	redisClient *redis.Client
+)
+
+func init() {
+	if err := godotenv.Load(); err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	if err := OpenDB(); err != nil {
+		log.Fatal("Failed to connect to database:", err)
+	}
+
+	// Initialize Redis client
+	redisClient = redis.NewClient(&redis.Options{
+		Addr:     os.Getenv("REDIS_HOST") + ":" + os.Getenv("REDIS_PORT"),
+		Password: os.Getenv("REDIS_PASSWORD"), // no password set
+		DB:       0,                           // use default DB
+	})
+
+	// Test Redis connection
+	ctx := context.Background()
+	if err := redisClient.Ping(ctx).Err(); err != nil {
+		log.Fatalf("Failed to connect to Redis: %v", err)
+	}
+}
 
 func migrateSchema(db *gorm.DB) error {
 	// Auto migrate all models
@@ -49,6 +80,11 @@ func main() {
 		AllowCredentials: true,
 		MaxAge:           12 * 60 * 60, // 12 hours
 	}))
+
+	// Initialize services
+	cacheService := services.NewRedisCacheService(redisClient)
+	listenerService := services.NewListenerService(cacheService)
+	listenerService.StartListening("ali", 1)
 
 	RegisterRoutes(r)
 	r.Run(":8080")

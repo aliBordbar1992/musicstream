@@ -52,6 +52,8 @@ func RegisterRoutes(r *gin.Engine) {
 	uploadService := services.NewUploadService("uploads", DB)
 	artistService := services.NewArtistService(artistRepo)
 	queueService := services.NewQueueService(queueRepo, musicRepo)
+	cacheService := services.NewRedisCacheService(redisClient)
+	listenerService := services.NewListenerService(cacheService)
 
 	// Initialize link validator
 	linkValidator := domain.NewLinkValidator(&http.Client{})
@@ -62,6 +64,7 @@ func RegisterRoutes(r *gin.Engine) {
 	playlistController := controllers.NewPlaylistController(playlistService)
 	artistController := controllers.NewArtistController(artistService)
 	queueController := controllers.NewQueueController(queueService)
+	websocketController := controllers.NewWebSocketController(listenerService)
 
 	// Health check
 	r.GET("/health", func(c *gin.Context) {
@@ -102,4 +105,7 @@ func RegisterRoutes(r *gin.Engine) {
 	r.POST("/queue/next", AuthMiddleware(), queueController.AddToNext)
 	r.DELETE("/queue/items/:id", AuthMiddleware(), queueController.RemoveFromQueue)
 	r.PUT("/queue/items/:id/position", AuthMiddleware(), queueController.UpdateQueueItemPosition)
+
+	// WebSocket route for synchronized listening
+	r.GET("/ws/listen", AuthMiddleware(), websocketController.HandleWebSocket)
 }
