@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/aliBordbar1992/musicstream-backend/internal/domain"
+	"github.com/aliBordbar1992/musicstream-backend/internal/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
@@ -44,8 +45,8 @@ func NewWebSocketController(listenerService domain.ListenerService) *WebSocketCo
 
 // HandleWebSocket handles WebSocket connections
 func (c *WebSocketController) HandleWebSocket(ctx *gin.Context) {
-	username := ctx.GetString("username")
-	if username == "" {
+	username, err := utils.ValidateTokenAndGetUsername(ctx)
+	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
@@ -137,6 +138,8 @@ func (c *WebSocketController) readPump(client *Client) {
 			c.handleSeek(client, payload.Position)
 		case "pause":
 			c.handlePause(client)
+		case "resume":
+			c.handleResume(client)
 		}
 	}
 }
@@ -342,6 +345,31 @@ func (c *WebSocketController) handlePause(client *Client) {
 	data, err := json.Marshal(event)
 	if err != nil {
 		log.Printf("Failed to marshal pause event: %v", err)
+		return
+	}
+
+	c.broadcastToMusic(client.musicID, data)
+}
+
+// handleResume handles resume events
+func (c *WebSocketController) handleResume(client *Client) {
+	event := struct {
+		Type    string `json:"t"`
+		Payload struct {
+			Username string `json:"u"`
+		} `json:"p"`
+	}{
+		Type: "resume",
+		Payload: struct {
+			Username string `json:"u"`
+		}{
+			Username: client.username,
+		},
+	}
+
+	data, err := json.Marshal(event)
+	if err != nil {
+		log.Printf("Failed to marshal resume event: %v", err)
 		return
 	}
 

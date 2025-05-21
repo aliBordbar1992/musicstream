@@ -6,6 +6,7 @@ import { PlayerProvider } from "@/store/PlayerContext";
 import { AuthProvider } from "@/store/AuthContext";
 import { QueueSidebarProvider } from "@/store/QueueSidebarContext";
 import { QueueProvider } from "@/store/QueueContext";
+import { WebSocketSessionProvider } from "@/store/WebSocketSessionContext";
 import { useState } from "react";
 import { Toaster } from "react-hot-toast";
 
@@ -33,9 +34,11 @@ export default function Providers({ children }: { children: React.ReactNode }) {
           disableTransitionOnChange
         >
           <PlayerProvider>
-            <QueueProvider>
-              <QueueSidebarProvider>{children}</QueueSidebarProvider>
-            </QueueProvider>
+            <WebSocketSessionProvider>
+              <QueueProvider>
+                <QueueSidebarProvider>{children}</QueueSidebarProvider>
+              </QueueProvider>
+            </WebSocketSessionProvider>
           </PlayerProvider>
           <Toaster
             position="bottom-right"

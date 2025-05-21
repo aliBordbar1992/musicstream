@@ -1,13 +1,9 @@
+"use client";
+
 import { createContext, useContext, useReducer, ReactNode } from "react";
 import { queue as queueApi } from "@/lib/api";
 import { handleApiError } from "@/utils/error";
-import {
-  Queue,
-  QueueItem,
-  QueueState,
-  QueueAction,
-  QueueContextType,
-} from "@/types";
+import { QueueState, QueueAction, QueueContextType } from "@/types";
 import axios from "axios";
 
 const QueueContext = createContext<QueueContextType | undefined>(undefined);

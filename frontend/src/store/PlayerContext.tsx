@@ -10,6 +10,7 @@ import React, {
 import { PlayerTrack } from "@/types/domain";
 import { PlayerState, PlayerAction } from "@/types/state";
 import { PlayerContextType } from "@/types/context";
+import { eventBus } from "@/lib/eventBus";
 
 const initialState: PlayerState = {
   currentTrack: null,
@@ -23,15 +24,21 @@ function playerReducer(state: PlayerState, action: PlayerAction): PlayerState {
         currentTrack: action.payload,
         isPlaying: true,
       };
+    case "CLEAR_TRACK":
+      return {
+        ...state,
+        isPlaying: false,
+        currentTrack: null,
+      };
     case "PAUSE":
       return {
         ...state,
         isPlaying: false,
       };
-    case "SET_PLAYING":
+    case "RESUME":
       return {
         ...state,
-        isPlaying: action.payload,
+        isPlaying: true,
       };
     case "SET_TRACK":
       return {
@@ -50,18 +57,34 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
   const playTrack = useCallback((track: PlayerTrack) => {
     dispatch({ type: "PLAY_TRACK", payload: track });
+    eventBus.emit("player:play", track);
+  }, []);
+
+  const clearTrack = useCallback(() => {
+    dispatch({ type: "CLEAR_TRACK" });
+    eventBus.emit("player:clear");
   }, []);
 
   const pause = useCallback(() => {
     dispatch({ type: "PAUSE" });
+    eventBus.emit("player:pause");
   }, []);
 
-  const setIsPlaying = useCallback((playing: boolean) => {
-    dispatch({ type: "SET_PLAYING", payload: playing });
+  const resume = useCallback(() => {
+    dispatch({ type: "RESUME" });
+    eventBus.emit("player:resume");
   }, []);
 
   const setCurrentTrack = useCallback((track: PlayerTrack | null) => {
     dispatch({ type: "SET_TRACK", payload: track });
+  }, []);
+
+  const seek = useCallback((position: number) => {
+    eventBus.emit("player:seek", position);
+  }, []);
+
+  const updateProgress = useCallback((progress: number) => {
+    eventBus.emit("player:progress", progress);
   }, []);
 
   return (
@@ -71,8 +94,11 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         isPlaying: state.isPlaying,
         playTrack,
         pause,
-        setIsPlaying,
+        resume,
         setCurrentTrack,
+        seek,
+        updateProgress,
+        clearTrack,
       }}
     >
       {children}

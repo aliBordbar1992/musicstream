@@ -2,7 +2,6 @@ package main
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/aliBordbar1992/musicstream-backend/internal/controllers"
 	"github.com/aliBordbar1992/musicstream-backend/internal/domain"
@@ -12,28 +11,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
-
-// AuthMiddleware handles authentication
-func AuthMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		token := strings.TrimPrefix(c.GetHeader("Authorization"), "Bearer ")
-		if token == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is required"})
-			c.Abort()
-			return
-		}
-
-		claims, err := utils.ValidateToken(token)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
-			c.Abort()
-			return
-		}
-
-		c.Set("username", claims.Username)
-		c.Next()
-	}
-}
 
 // RegisterRoutes sets up all the routes for the application
 func RegisterRoutes(r *gin.Engine) {
@@ -74,38 +51,38 @@ func RegisterRoutes(r *gin.Engine) {
 	// User routes
 	r.POST("/register", userController.Register)
 	r.POST("/login", userController.Login)
-	r.GET("/me", AuthMiddleware(), userController.GetUser)
+	r.GET("/me", utils.AuthMiddleware(), userController.GetUser)
 
 	// Music routes
-	r.POST("/music/upload", AuthMiddleware(), musicController.UploadMusic)
-	r.POST("/music/download", AuthMiddleware(), musicController.DownloadMusicFromURL)
-	r.GET("/music/:id", AuthMiddleware(), musicController.GetMusic)
-	r.GET("/music/:id/stream", AuthMiddleware(), musicController.StreamMusic)
-	r.GET("/music", AuthMiddleware(), musicController.ListMusic)
-	r.GET("/music/search", AuthMiddleware(), musicController.SearchMusic)
-	r.DELETE("/music/:id", AuthMiddleware(), musicController.DeleteMusic)
+	r.POST("/music/upload", utils.AuthMiddleware(), musicController.UploadMusic)
+	r.POST("/music/download", utils.AuthMiddleware(), musicController.DownloadMusicFromURL)
+	r.GET("/music/:id", utils.AuthMiddleware(), musicController.GetMusic)
+	r.GET("/music/:id/stream", utils.AuthMiddleware(), musicController.StreamMusic)
+	r.GET("/music", utils.AuthMiddleware(), musicController.ListMusic)
+	r.GET("/music/search", utils.AuthMiddleware(), musicController.SearchMusic)
+	r.DELETE("/music/:id", utils.AuthMiddleware(), musicController.DeleteMusic)
 
 	// Playlist routes
-	r.POST("/playlists", AuthMiddleware(), playlistController.CreatePlaylist)
-	r.GET("/playlists/:id", AuthMiddleware(), playlistController.GetPlaylist)
-	r.GET("/playlists", AuthMiddleware(), playlistController.ListPlaylists)
-	r.DELETE("/playlists/:id", AuthMiddleware(), playlistController.DeletePlaylist)
-	r.POST("/playlists/:id/songs", AuthMiddleware(), playlistController.AddSongToPlaylist)
-	r.DELETE("/playlists/:id/songs/:musicId", AuthMiddleware(), playlistController.RemoveSongFromPlaylist)
-	r.GET("/playlists/:id/songs", AuthMiddleware(), playlistController.GetPlaylistSongs)
+	r.POST("/playlists", utils.AuthMiddleware(), playlistController.CreatePlaylist)
+	r.GET("/playlists/:id", utils.AuthMiddleware(), playlistController.GetPlaylist)
+	r.GET("/playlists", utils.AuthMiddleware(), playlistController.ListPlaylists)
+	r.DELETE("/playlists/:id", utils.AuthMiddleware(), playlistController.DeletePlaylist)
+	r.POST("/playlists/:id/songs", utils.AuthMiddleware(), playlistController.AddSongToPlaylist)
+	r.DELETE("/playlists/:id/songs/:musicId", utils.AuthMiddleware(), playlistController.RemoveSongFromPlaylist)
+	r.GET("/playlists/:id/songs", utils.AuthMiddleware(), playlistController.GetPlaylistSongs)
 
 	// Artist routes
-	r.GET("/artists/search", AuthMiddleware(), artistController.SearchArtists)
-	r.POST("/artists", AuthMiddleware(), artistController.CreateArtist)
+	r.GET("/artists/search", utils.AuthMiddleware(), artistController.SearchArtists)
+	r.POST("/artists", utils.AuthMiddleware(), artistController.CreateArtist)
 
 	// Queue management routes
-	r.POST("/queue", AuthMiddleware(), queueController.CreateQueue)
-	r.GET("/queue", AuthMiddleware(), queueController.GetQueue)
-	r.POST("/queue/items", AuthMiddleware(), queueController.AddToQueue)
-	r.POST("/queue/next", AuthMiddleware(), queueController.AddToNext)
-	r.DELETE("/queue/items/:id", AuthMiddleware(), queueController.RemoveFromQueue)
-	r.PUT("/queue/items/:id/position", AuthMiddleware(), queueController.UpdateQueueItemPosition)
+	r.POST("/queue", utils.AuthMiddleware(), queueController.CreateQueue)
+	r.GET("/queue", utils.AuthMiddleware(), queueController.GetQueue)
+	r.POST("/queue/items", utils.AuthMiddleware(), queueController.AddToQueue)
+	r.POST("/queue/next", utils.AuthMiddleware(), queueController.AddToNext)
+	r.DELETE("/queue/items/:id", utils.AuthMiddleware(), queueController.RemoveFromQueue)
+	r.PUT("/queue/items/:id/position", utils.AuthMiddleware(), queueController.UpdateQueueItemPosition)
 
 	// WebSocket route for synchronized listening
-	r.GET("/ws/listen", AuthMiddleware(), websocketController.HandleWebSocket)
+	r.GET("/ws/listen", utils.AuthMiddleware(), websocketController.HandleWebSocket)
 }

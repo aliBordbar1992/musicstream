@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import * as Slider from "@radix-ui/react-slider";
 import {
@@ -19,8 +19,15 @@ import Cookies from "js-cookie";
 import { formatDuration } from "@/utils/formatDuration";
 import Image from "next/image";
 export default function MusicPlayer() {
-  const { currentTrack, isPlaying, setIsPlaying, setCurrentTrack } =
-    usePlayer();
+  const {
+    currentTrack,
+    isPlaying,
+    clearTrack,
+    pause,
+    resume,
+    seek,
+    updateProgress,
+  } = usePlayer();
   const { toggle: toggleQueue } = useQueueSidebar();
   const [volume, setVolume] = useState(80);
   const [isMuted, setIsMuted] = useState(false);
@@ -35,12 +42,32 @@ export default function MusicPlayer() {
   const isMounted = useRef(true);
   const isLoading = useRef(false);
 
+  const updateProgressState = useCallback(
+    (audio: HTMLAudioElement) => {
+      const newTime = audio.currentTime;
+      const newProgress = (newTime / audio.duration) * 100;
+
+      setCurrentTime(newTime);
+      updateProgress(newTime);
+      setProgress(newProgress);
+    },
+    [updateProgress]
+  );
+
   const handleClose = () => {
     if (audioRef.current) {
       audioRef.current.pause();
+      audioRef.current.src = "";
+      audioRef.current.load();
+      audioRef.current = null;
     }
-    setIsPlaying(false);
-    setCurrentTrack(null);
+    if (objectUrlRef.current) {
+      URL.revokeObjectURL(objectUrlRef.current);
+      objectUrlRef.current = null;
+    }
+    hasLoadedAudio.current = false;
+    currentTrackId.current = null;
+    clearTrack();
   };
 
   // Load audio when track changes
@@ -67,8 +94,10 @@ export default function MusicPlayer() {
           // If the audio is already loaded but not playing and isPlaying is true, start playing
           if (!audioRef.current.paused && !isPlaying) {
             audioRef.current.pause();
+            pause();
           } else if (audioRef.current.paused && isPlaying) {
             await audioRef.current.play();
+            resume();
           }
           isLoading.current = false;
           return;
@@ -120,20 +149,21 @@ export default function MusicPlayer() {
         objectUrlRef.current = objectUrl;
 
         // Initialize or update audio element
-        if (!audioRef.current) {
-          audioRef.current = new Audio();
+        let audio = audioRef.current;
+        if (!audio) {
+          audio = new Audio();
         }
 
         // Set up event listeners before setting the source
-        audioRef.current.addEventListener("loadedmetadata", () => {
-          if (audioRef.current && isMounted.current) {
-            setDuration(audioRef.current.duration);
+        audio.addEventListener("loadedmetadata", () => {
+          if (audio && isMounted.current) {
+            setDuration(audio.duration);
             if (isInitialLoad.current) {
               isInitialLoad.current = false;
               if (isPlaying) {
-                audioRef.current.play().catch((error) => {
+                audio.play().catch((error) => {
                   console.error("Error playing audio:", error);
-                  setIsPlaying(false);
+                  clearTrack();
                 });
               }
             }
@@ -142,27 +172,26 @@ export default function MusicPlayer() {
           }
         });
 
-        audioRef.current.addEventListener("timeupdate", () => {
-          if (audioRef.current && isMounted.current) {
-            const newTime = audioRef.current.currentTime;
-            const newProgress = (newTime / audioRef.current.duration) * 100;
-            setCurrentTime(newTime);
-            setProgress(newProgress);
+        audio.addEventListener("timeupdate", () => {
+          if (audio && isMounted.current) {
+            updateProgressState(audio);
           }
         });
 
         // Set the source and other properties
-        audioRef.current.src = objectUrl;
-        audioRef.current.volume = volume / 100;
-        audioRef.current.muted = isMuted;
+        audio.src = objectUrl;
+        audio.volume = volume / 100;
+        audio.muted = isMuted;
 
         if (isPlaying) {
-          await audioRef.current.play();
+          await audio.play();
         }
+
+        audioRef.current = audio;
       } catch (error) {
         console.error("Error loading audio:", error);
         if (isMounted.current) {
-          setIsPlaying(false);
+          pause();
         }
       } finally {
         isLoading.current = false;
@@ -183,7 +212,7 @@ export default function MusicPlayer() {
     if (isPlaying) {
       audioRef.current.play().catch((error) => {
         console.error("Error playing audio:", error);
-        setIsPlaying(false);
+        clearTrack();
       });
     } else {
       audioRef.current.pause();
@@ -212,35 +241,46 @@ export default function MusicPlayer() {
 
   // Set up audio event listeners
   useEffect(() => {
+    console.log("Setting up audio event listeners");
     const audio = audioRef.current;
     if (!audio) return;
 
     const handleEnded = () => {
-      setIsPlaying(false);
+      pause();
       setProgress(0);
       setCurrentTime(0);
     };
 
     const handleError = (error: Event) => {
       console.error("Audio error:", error);
-      setIsPlaying(false);
+      clearTrack();
+    };
+
+    const handleTimeUpdate = () => {
+      if (audio && isMounted.current) {
+        updateProgressState(audio);
+      }
     };
 
     audio.addEventListener("ended", handleEnded);
     audio.addEventListener("error", handleError);
+    audio.addEventListener("timeupdate", handleTimeUpdate);
 
     return () => {
       audio.removeEventListener("ended", handleEnded);
       audio.removeEventListener("error", handleError);
+      audio.removeEventListener("timeupdate", handleTimeUpdate);
     };
-  }, [isPlaying, setIsPlaying]);
+  }, [clearTrack, isPlaying, pause, updateProgress, updateProgressState]);
 
   const handleProgressChange = (value: number) => {
     if (!audioRef.current || isNaN(audioRef.current.duration)) return;
     const newTime = (value / 100) * audioRef.current.duration;
     audioRef.current.currentTime = newTime;
-    setProgress(value);
     setCurrentTime(newTime);
+    updateProgress(newTime);
+    setProgress(value);
+    seek(newTime);
   };
 
   const handleVolumeChange = (value: number) => {
@@ -327,7 +367,13 @@ export default function MusicPlayer() {
                 <BackwardIcon className="h-6 w-6" />
               </button>
               <button
-                onClick={() => setIsPlaying(!isPlaying)}
+                onClick={() => {
+                  if (isPlaying) {
+                    pause();
+                  } else {
+                    resume();
+                  }
+                }}
                 className="p-3 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full transition-colors"
                 aria-label={isPlaying ? "Pause" : "Play"}
               >

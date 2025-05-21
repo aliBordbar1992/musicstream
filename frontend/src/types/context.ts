@@ -21,8 +21,11 @@ export interface PlayerContextType {
   isPlaying: boolean;
   playTrack: (track: PlayerTrack) => void;
   pause: () => void;
-  setIsPlaying: (playing: boolean) => void;
+  resume: () => void;
   setCurrentTrack: (track: PlayerTrack | null) => void;
+  seek: (position: number) => void;
+  updateProgress: (progress: number) => void;
+  clearTrack: () => void;
 }
 
 // Auth context types

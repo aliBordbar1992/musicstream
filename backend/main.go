@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/aliBordbar1992/musicstream-backend/internal/domain"
-	"github.com/aliBordbar1992/musicstream-backend/internal/services"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -82,9 +81,6 @@ func main() {
 	}))
 
 	// Initialize services
-	cacheService := services.NewRedisCacheService(redisClient)
-	listenerService := services.NewListenerService(cacheService)
-	listenerService.StartListening("ali", 1)
 
 	RegisterRoutes(r)
 	r.Run(":8080")

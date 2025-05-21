@@ -39,6 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Fetch user data after successful login
     const userData = await auth.getCurrentUser();
+    console.log("userData", userData);
     setUser(userData);
   };
 

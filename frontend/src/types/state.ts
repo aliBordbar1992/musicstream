@@ -22,7 +22,9 @@ export interface PlayerState {
 
 export type PlayerAction =
   | { type: "PLAY_TRACK"; payload: PlayerTrack }
+  | { type: "CLEAR_TRACK" }
   | { type: "PAUSE" }
+  | { type: "RESUME" }
   | { type: "SET_PLAYING"; payload: boolean }
   | { type: "SET_TRACK"; payload: PlayerTrack | null };
 
