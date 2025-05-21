@@ -29,6 +29,16 @@ func (s *listenerService) generateListenersKey(musicID uint) string {
 }
 
 func (s *listenerService) StartListening(username string, musicID uint) error {
+	// First, get existing listeners
+	listenersKey := s.generateListenersKey(musicID)
+	var listeners []*domain.Listener
+	if exists, _ := s.cacheService.Exists(listenersKey); exists {
+		if err := s.cacheService.Get(listenersKey, &listeners); err != nil {
+			return err
+		}
+	}
+
+	// Create new listener
 	listener := &domain.Listener{
 		Username:  username,
 		MusicID:   musicID,
@@ -43,13 +53,6 @@ func (s *listenerService) StartListening(username string, musicID uint) error {
 	}
 
 	// Add to music's listeners set
-	listenersKey := s.generateListenersKey(musicID)
-	var listeners []*domain.Listener
-	if exists, _ := s.cacheService.Exists(listenersKey); exists {
-		if err := s.cacheService.Get(listenersKey, &listeners); err != nil {
-			return err
-		}
-	}
 	listeners = append(listeners, listener)
 	return s.cacheService.Set(listenersKey, listeners, 24*time.Hour)
 }

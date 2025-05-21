@@ -118,6 +118,37 @@ func (c *WebSocketController) readPump(client *Client) {
 		}
 
 		switch event.Type {
+		case "get_listeners":
+			// Get current listeners for this music
+			listeners, err := c.listenerService.GetCurrentListeners(client.musicID)
+			if err != nil {
+				log.Printf("Failed to get current listeners: %v", err)
+				continue
+			}
+
+			// Send current listeners to the requesting client
+			response := struct {
+				Type    string `json:"t"`
+				Payload struct {
+					Listeners []*domain.Listener `json:"l"`
+				} `json:"p"`
+			}{
+				Type: "current_listeners",
+				Payload: struct {
+					Listeners []*domain.Listener `json:"l"`
+				}{
+					Listeners: listeners,
+				},
+			}
+
+			data, err := json.Marshal(response)
+			if err != nil {
+				log.Printf("Failed to marshal current listeners response: %v", err)
+				continue
+			}
+
+			client.send <- data
+
 		case "progress":
 			var payload struct {
 				Position float64 `json:"p"`

@@ -54,8 +54,8 @@ export default function WebSocketTestPage() {
         addEvent("User Joined", data),
       "session:userLeft": (data: EventTypes["session:userLeft"]) =>
         addEvent("User Left", data),
-      "session:progressUpdate": (data: EventTypes["session:progressUpdate"]) =>
-        addEvent("Progress Update", data),
+      /*       "session:progressUpdate": (data: EventTypes["session:progressUpdate"]) =>
+        addEvent("Progress Update", data), */
       "session:seekUpdate": (data: EventTypes["session:seekUpdate"]) =>
         addEvent("Seek Update", data),
       "session:pauseUpdate": (data: EventTypes["session:pauseUpdate"]) =>

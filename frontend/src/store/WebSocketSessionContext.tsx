@@ -74,6 +74,16 @@ export function WebSocketSessionProvider({
         case "resume":
           eventBus.emit("session:resumeUpdate", { username: data.p.u });
           break;
+        case "current_listeners":
+          // Handle the response to get_listeners request
+          const listeners = data.p.l.map(
+            (l: { username: string; position: number }) => ({
+              username: l.username,
+              position: l.position,
+            })
+          );
+          setListeners(listeners);
+          break;
       }
     } catch (error) {
       console.error("Failed to parse WebSocket message:", error);
@@ -122,12 +132,21 @@ export function WebSocketSessionProvider({
         setIsConnected(true);
         setCurrentMusicId(musicId);
         eventBus.emit("session:connected");
+
+        // Request current listeners after connection
+        ws.send(
+          JSON.stringify({
+            t: "get_listeners",
+            p: {},
+          })
+        );
       };
 
       ws.onclose = (event) => {
         console.log("WebSocket closed:", event.code, event.reason);
         setIsConnected(false);
         setCurrentMusicId(null);
+        setListeners([]);
         eventBus.emit("session:disconnected");
 
         // Attempt to reconnect if the connection was lost
