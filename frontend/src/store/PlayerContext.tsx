@@ -55,10 +55,18 @@ const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
 export function PlayerProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(playerReducer, initialState);
 
-  const playTrack = useCallback((track: PlayerTrack) => {
-    dispatch({ type: "PLAY_TRACK", payload: track });
-    eventBus.emit("player:play", track);
-  }, []);
+  const playTrack = useCallback(
+    (track: PlayerTrack) => {
+      // If the track is already playing, do nothing
+      if (state.currentTrack?.id === track.id) {
+        return;
+      }
+
+      dispatch({ type: "PLAY_TRACK", payload: track });
+      eventBus.emit("player:play", track);
+    },
+    [state.currentTrack?.id]
+  );
 
   const clearTrack = useCallback(() => {
     dispatch({ type: "CLEAR_TRACK" });

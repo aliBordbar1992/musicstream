@@ -143,7 +143,7 @@ export function WebSocketSessionProvider({
       };
 
       ws.onclose = (event) => {
-        console.log("WebSocket closed:", event.code, event.reason);
+        console.log("WebSocket closed:", event);
         setIsConnected(false);
         setCurrentMusicId(null);
         setListeners([]);

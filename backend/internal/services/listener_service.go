@@ -52,7 +52,13 @@ func (s *listenerService) StartListening(username string, musicID uint) error {
 		return err
 	}
 
-	// Add to music's listeners set
+	// Add to music's listeners set if not present
+	for _, l := range listeners {
+		if l.Username == username {
+			return nil
+		}
+	}
+
 	listeners = append(listeners, listener)
 	return s.cacheService.Set(listenersKey, listeners, 24*time.Hour)
 }
