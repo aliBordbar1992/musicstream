@@ -7,7 +7,7 @@ export interface WebSocketSessionContextType {
   }>;
   connect: () => void;
   disconnect: () => void;
-  joinSession: (musicId: number) => void;
+  joinSession: (musicId: number, position: number | null) => void;
   leaveSession: () => void;
 }
 
@@ -17,7 +17,7 @@ export interface Listener {
 }
 
 type WebSocketPayload =
-  | { music_id: number } // join_session
+  | { music_id: number; position: number | null } // join_session
   | Record<string, never> // pause, resume, get_listeners
   | { p: number } // seek, progress
   | { u: string; p?: number } // user_joined, user_left

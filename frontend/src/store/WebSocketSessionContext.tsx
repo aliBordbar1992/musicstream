@@ -25,46 +25,28 @@ export function WebSocketSessionProvider({
   } = useWebSocketConnection();
   const {
     currentMusicId,
-    setCurrentMusicId,
     listeners,
     setListeners,
     handleUserJoined,
     handleUserLeft,
     handleProgressUpdate,
-    clearSession,
-  } = useSessionState();
+    joinSession,
+    leaveSession,
+  } = useSessionState(wsRef, updateLastActivity, sendMessage);
 
-  // Join a music session
-  const joinSession = (musicId: number) => {
+  /*   // Join a music session
+  const joinSession = (musicId: number, position: number | null) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
-      console.log("Joining session");
-      updateLastActivity();
-      sendMessage({
-        t: "join_session",
-        p: { music_id: musicId },
-      });
-      setCurrentMusicId(musicId);
-
-      // Request current listeners after joining
-      sendMessage({
-        t: "get_listeners",
-        p: {},
-      });
+      joinSessionState(musicId, position, sendMessage, updateLastActivity);
     }
   };
 
   // Leave current music session
   const leaveSession = () => {
-    console.log("Leaving session");
-    if (wsRef.current?.readyState === WebSocket.OPEN && currentMusicId) {
-      updateLastActivity();
-      sendMessage({
-        t: "leave_session",
-        p: {},
-      });
-      clearSession();
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      leaveSessionState(sendMessage, updateLastActivity);
     }
-  };
+  }; */
 
   // Handle WebSocket messages
   useEffect(() => {

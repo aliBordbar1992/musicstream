@@ -9,7 +9,7 @@ export function usePlayerEvents(
   currentMusicId: number | null,
   updateLastActivity: () => void,
   connect: () => void,
-  joinSession: (musicId: number) => void,
+  joinSession: (musicId: number, position: number | null) => void,
   leaveSession: () => void,
   sendMessage: (message: WebSocketMessage) => void
 ) {
@@ -29,13 +29,13 @@ export function usePlayerEvents(
           if (isConnectedRef.current) {
             clearInterval(checkConnection);
             console.log("Connected, joining session");
-            joinSession(track.id);
+            joinSession(track.id, track.position);
           }
         }, 100);
         setTimeout(() => clearInterval(checkConnection), 5000);
       } else {
         console.log("Already connected, joining session");
-        joinSession(track.id);
+        joinSession(track.id, track.position);
       }
     };
 
@@ -104,5 +104,6 @@ export function usePlayerEvents(
     leaveSession,
     wsRef,
     updateLastActivity,
+    sendMessage,
   ]);
 }

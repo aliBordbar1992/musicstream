@@ -104,9 +104,10 @@ export const useQueueManagement = (): [
         setCurrentTrack({
           id: item.music.id,
           title: item.music.title,
-          artist: item.music.artistName,
+          artist: item.music.artist.name,
           duration: item.music.duration,
           url: `/api/music/${item.music.id}/stream`,
+          position: 0,
         });
         setIsPlaying(true);
       } catch (err) {

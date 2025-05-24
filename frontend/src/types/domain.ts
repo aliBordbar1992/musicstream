@@ -46,6 +46,7 @@ export interface PlayerTrack {
   duration: number;
   image?: string;
   url?: string;
+  position: number | null;
 }
 
 // User domain types

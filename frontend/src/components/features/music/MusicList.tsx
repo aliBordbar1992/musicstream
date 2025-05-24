@@ -28,6 +28,7 @@ export function MusicList({
       artist: track.artist.name,
       duration: track.duration,
       url: music.stream(track.id),
+      position: 0,
     });
   };
 

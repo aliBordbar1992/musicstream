@@ -1,8 +1,12 @@
 import { useState } from "react";
-import { Listener } from "./types";
+import { Listener, WebSocketMessage } from "./types";
 import { EventTypes } from "@/lib/eventBus";
 
-export function useSessionState() {
+export function useSessionState(
+  wsRef: React.RefObject<WebSocket | null>,
+  updateLastActivity: () => void,
+  sendMessage: (message: WebSocketMessage) => void
+) {
   const [currentMusicId, setCurrentMusicId] = useState<number | null>(null);
   const [listeners, setListeners] = useState<Listener[]>([]);
 
@@ -30,6 +34,36 @@ export function useSessionState() {
     setListeners([]);
   };
 
+  const joinSession = (musicId: number, position: number | null) => {
+    console.log("Joining session", musicId, position);
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      updateLastActivity();
+      sendMessage({
+        t: "join_session",
+        p: { music_id: musicId, position: position },
+      });
+      setCurrentMusicId(musicId);
+
+      // Request current listeners after joining
+      sendMessage({
+        t: "get_listeners",
+        p: {},
+      });
+    }
+  };
+
+  const leaveSession = () => {
+    console.log("Leaving session");
+    if (wsRef.current?.readyState === WebSocket.OPEN && currentMusicId) {
+      updateLastActivity();
+      sendMessage({
+        t: "leave_session",
+        p: {},
+      });
+      clearSession();
+    }
+  };
+
   return {
     currentMusicId,
     setCurrentMusicId,
@@ -39,5 +73,7 @@ export function useSessionState() {
     handleUserLeft,
     handleProgressUpdate,
     clearSession,
+    joinSession,
+    leaveSession,
   };
 }
