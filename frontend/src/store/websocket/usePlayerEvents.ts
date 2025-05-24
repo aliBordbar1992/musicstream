@@ -9,9 +9,9 @@ export function usePlayerEvents(
   currentMusicId: number | null,
   updateLastActivity: () => void,
   connect: () => void,
-  joinSession: (musicId: number, position: number | null) => void,
+  joinSession: (musicId: number, position: number | null) => Promise<void>,
   leaveSession: () => void,
-  sendMessage: (message: WebSocketMessage) => void
+  sendMessage: (message: WebSocketMessage) => Promise<void>
 ) {
   const lastProgressUpdateRef = useRef<number>(0);
   const isConnectedRef = useRef(isConnected);
@@ -23,20 +23,12 @@ export function usePlayerEvents(
   useEffect(() => {
     const handlePlay = (track: PlayerTrack) => {
       console.log("handlePlay", track);
-      if (!isConnectedRef.current) {
-        connect();
-        const checkConnection = setInterval(() => {
-          if (isConnectedRef.current) {
-            clearInterval(checkConnection);
-            console.log("Connected, joining session");
-            joinSession(track.id, track.position);
-          }
-        }, 100);
-        setTimeout(() => clearInterval(checkConnection), 5000);
-      } else {
-        console.log("Already connected, joining session");
-        joinSession(track.id, track.position);
-      }
+      joinSession(track.id, track.position).catch((error) => {
+        console.error("Failed to join session:", error);
+        eventBus.emit("session:error", {
+          message: "Failed to join session",
+        });
+      });
     };
 
     const handleClear = () => {
@@ -48,6 +40,11 @@ export function usePlayerEvents(
       sendMessage({
         t: "pause",
         p: {},
+      }).catch((error) => {
+        console.error("Failed to send pause event:", error);
+        eventBus.emit("session:error", {
+          message: "Failed to send pause event",
+        });
       });
     };
 
@@ -56,6 +53,11 @@ export function usePlayerEvents(
       sendMessage({
         t: "resume",
         p: {},
+      }).catch((error) => {
+        console.error("Failed to send resume event:", error);
+        eventBus.emit("session:error", {
+          message: "Failed to send resume event",
+        });
       });
     };
 
@@ -64,6 +66,11 @@ export function usePlayerEvents(
       sendMessage({
         t: "seek",
         p: { p: position },
+      }).catch((error) => {
+        console.error("Failed to send seek event:", error);
+        eventBus.emit("session:error", {
+          message: "Failed to send seek event",
+        });
       });
     };
 
@@ -74,6 +81,9 @@ export function usePlayerEvents(
         sendMessage({
           t: "progress",
           p: { p: position },
+        }).catch((error) => {
+          console.error("Failed to send progress event:", error);
+          // Don't emit error for progress updates to avoid spam
         });
         lastProgressUpdateRef.current = now;
       }

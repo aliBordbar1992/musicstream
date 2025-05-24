@@ -32,7 +32,7 @@ export function WebSocketSessionProvider({
     handleProgressUpdate,
     joinSession,
     leaveSession,
-  } = useSessionState(wsRef, updateLastActivity, sendMessage);
+  } = useSessionState(wsRef, updateLastActivity, sendMessage, connect);
 
   /*   // Join a music session
   const joinSession = (musicId: number, position: number | null) => {
@@ -87,7 +87,7 @@ export function WebSocketSessionProvider({
             break;
         }
       } catch (error) {
-        console.error("Failed to parse WebSocket message:", error);
+        console.error("Failed to parse WebSocket message:", error, event);
         eventBus.emit("session:error", {
           message: "Failed to parse WebSocket message",
         });

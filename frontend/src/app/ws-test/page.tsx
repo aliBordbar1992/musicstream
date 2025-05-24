@@ -8,7 +8,7 @@ import { LayoutContent } from "@/components/layouts/LayoutContent";
 import { useWebSocketSession } from "@/store/WebSocketSessionContext";
 import { eventBus, EventTypes } from "@/lib/eventBus";
 import type { Handler } from "mitt";
-
+import Button from "@/components/ui/Button";
 interface SessionEvent {
   type: string;
   data: unknown;
@@ -19,7 +19,8 @@ export default function WebSocketTestPage() {
   const [musicList, setMusicList] = useState<Music[]>([]);
   const [loading, setLoading] = useState(true);
   const [sessionEvents, setSessionEvents] = useState<SessionEvent[]>([]);
-  const { isConnected, currentMusicId, listeners } = useWebSocketSession();
+  const { isConnected, currentMusicId, listeners, disconnect } =
+    useWebSocketSession();
 
   useEffect(() => {
     const fetchMusic = async () => {
@@ -130,6 +131,7 @@ export default function WebSocketTestPage() {
                 Status: {isConnected ? "Connected" : "Disconnected"}
                 {currentMusicId && ` (Music ID: ${currentMusicId})`}
               </div>
+              <Button onClick={disconnect}>Disconnect</Button>
               {listeners.length > 0 && (
                 <div className="mt-2">
                   <div className="text-sm font-medium mb-1">

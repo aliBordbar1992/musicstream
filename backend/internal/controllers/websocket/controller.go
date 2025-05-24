@@ -159,7 +159,7 @@ func (c *WebSocketController) unregister(client *Client) {
 
 // SessionManager interface implementation
 func (c *WebSocketController) JoinSession(username string, musicID uint) error {
-	// get currently listening user
+	/* // get currently listening user
 	currentlyListeningUser, err := c.listenerService.GetCurrentlyListeningUser(username)
 	if err != nil {
 		return err
@@ -169,7 +169,7 @@ func (c *WebSocketController) JoinSession(username string, musicID uint) error {
 	if currentlyListeningUser != nil {
 		log.Println("Stopping listening to the music track")
 		c.listenerService.StopListening(username, currentlyListeningUser.MusicID)
-	}
+	} */
 
 	return c.listenerService.StartListening(username, musicID)
 }

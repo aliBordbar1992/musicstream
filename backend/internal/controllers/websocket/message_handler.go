@@ -77,12 +77,16 @@ func (h *DefaultMessageHandler) HandleMessage(client *Client, message []byte) {
 func (h *DefaultMessageHandler) handleJoinSession(client *Client, payload json.RawMessage) {
 	log.Println("handling join session message", client.username, payload)
 	var data struct {
-		MusicID uint `json:"music_id"`
+		MusicID  uint    `json:"music_id"`
+		Position float64 `json:"position"`
 	}
 	if err := json.Unmarshal(payload, &data); err != nil {
 		log.Printf("Failed to unmarshal join session payload: %v", err)
 		return
 	}
+
+	// leave previous session
+	h.handleLeaveSession(client)
 
 	if err := h.sessionManager.JoinSession(client.username, data.MusicID); err != nil {
 		log.Printf("Failed to join session: %v", err)
@@ -90,6 +94,31 @@ func (h *DefaultMessageHandler) handleJoinSession(client *Client, payload json.R
 	}
 
 	client.musicID = &data.MusicID
+
+	event := struct {
+		Type    string `json:"t"`
+		Payload struct {
+			Username string  `json:"u"`
+			Position float64 `json:"p"`
+		} `json:"p"`
+	}{
+		Type: "user_joined",
+		Payload: struct {
+			Username string  `json:"u"`
+			Position float64 `json:"p"`
+		}{
+			Username: client.username,
+			Position: data.Position,
+		},
+	}
+
+	eventData, err := json.Marshal(event)
+	if err != nil {
+		log.Printf("Failed to marshal join session event: %v", err)
+		return
+	}
+
+	h.sessionManager.BroadcastToMusic(*client.musicID, eventData)
 }
 
 func (h *DefaultMessageHandler) handleLeaveSession(client *Client) {
@@ -97,11 +126,35 @@ func (h *DefaultMessageHandler) handleLeaveSession(client *Client) {
 		return
 	}
 
-	if err := h.sessionManager.LeaveSession(client.username, *client.musicID); err != nil {
+	musicID := *client.musicID // Store the musicID before nilling it
+
+	if err := h.sessionManager.LeaveSession(client.username, musicID); err != nil {
 		log.Printf("Failed to leave session: %v", err)
 	}
 
 	client.musicID = nil
+
+	event := struct {
+		Type    string `json:"t"`
+		Payload struct {
+			Username string `json:"u"`
+		} `json:"p"`
+	}{
+		Type: "user_left",
+		Payload: struct {
+			Username string `json:"u"`
+		}{
+			Username: client.username,
+		},
+	}
+
+	eventData, err := json.Marshal(event)
+	if err != nil {
+		log.Printf("Failed to marshal leave session event: %v", err)
+		return
+	}
+
+	h.sessionManager.BroadcastToMusic(musicID, eventData)
 }
 
 func (h *DefaultMessageHandler) handleGetListeners(client *Client) {
