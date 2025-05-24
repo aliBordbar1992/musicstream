@@ -9,6 +9,8 @@ import { QueueProvider } from "@/store/QueueContext";
 import { WebSocketSessionProvider } from "@/store/WebSocketSessionContext";
 import { useState } from "react";
 import { Toaster } from "react-hot-toast";
+import MusicPlayer from "../features/music/MusicPlayer";
+import Navigation from "./Navigation";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -36,7 +38,11 @@ export default function Providers({ children }: { children: React.ReactNode }) {
           <PlayerProvider>
             <WebSocketSessionProvider>
               <QueueProvider>
-                <QueueSidebarProvider>{children}</QueueSidebarProvider>
+                <QueueSidebarProvider>
+                  <Navigation />
+                  {children}
+                  <MusicPlayer />
+                </QueueSidebarProvider>
               </QueueProvider>
             </WebSocketSessionProvider>
           </PlayerProvider>

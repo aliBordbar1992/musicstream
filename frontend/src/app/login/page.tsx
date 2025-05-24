@@ -1,79 +1,81 @@
 "use client";
 
+import { useState } from "react";
 import { useAuth } from "@/store/AuthContext";
-import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import toast from "react-hot-toast";
+import { LayoutContent } from "@/components/layouts/LayoutContent";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
-
-const schema = yup
-  .object({
-    username: yup.string().required("Username is required"),
-    password: yup.string().required("Password is required"),
-  })
-  .required();
-
-type LoginFormData = yup.InferType<typeof schema>;
-
 export default function LoginPage() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
-  const router = useRouter();
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<LoginFormData>({
-    resolver: yupResolver(schema),
-  });
 
-  const onSubmit = async (data: LoginFormData) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setIsLoading(true);
+
     try {
-      await login(data.username, data.password);
-      toast.success("Login successful!");
-      router.push("/");
+      await login(username, password);
     } catch {
-      toast.error("Invalid username or password");
+      setError("Invalid username or password");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="max-w-md mx-auto">
-      <h1 className="text-3xl font-bold text-center mb-8">Login</h1>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <Input
-          id="username"
-          label="Username"
-          type="text"
-          {...register("username")}
-          error={errors.username?.message}
-        />
+    <LayoutContent>
+      <div className="max-w-md mx-auto py-8">
+        <h1 className="text-3xl font-bold text-center mb-8">Login</h1>
 
-        <Input
-          id="password"
-          label="Password"
-          type="password"
-          {...register("password")}
-          error={errors.password?.message}
-        />
-
-        <Button type="submit" className="w-full" isLoading={isSubmitting}>
-          {isSubmitting ? "Logging in..." : "Login"}
-        </Button>
-      </form>
-
-      <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
-        Don&apos;t have an account?{" "}
-        <Link
-          href="/register"
-          className="font-medium text-indigo-600 hover:text-indigo-500"
+        <form
+          className="mb-8 space-y-6 bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-sm"
+          onSubmit={handleSubmit}
         >
-          Register here
-        </Link>
-      </p>
-    </div>
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+            <Input
+              id="username"
+              name="username"
+              required
+              placeholder="Username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+            <Input
+              id="password"
+              name="password"
+              required
+              placeholder="Password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+
+          {error && (
+            <div className="text-red-500 text-sm text-center">{error}</div>
+          )}
+          <Button
+            type="submit"
+            isLoading={isLoading}
+            className={`w-full ${isLoading ? "" : "py-4"}`}
+          >
+            {isLoading ? "" : "Sign in"}
+          </Button>
+          <div className="text-sm text-center">
+            <Link
+              href="/register"
+              className="font-medium text-indigo-400 hover:text-indigo-500"
+            >
+              Don&apos;t have an account? Register
+            </Link>
+          </div>
+        </form>
+      </div>
+    </LayoutContent>
   );
 }

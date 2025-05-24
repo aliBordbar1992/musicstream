@@ -35,6 +35,7 @@ export interface AuthContextType {
   login: (username: string, password: string) => Promise<void>;
   register: (username: string, password: string) => Promise<void>;
   logout: () => void;
+  handleUnauthorized: () => void;
 }
 
 // Queue sidebar context types

@@ -241,7 +241,6 @@ export default function MusicPlayer() {
 
   // Set up audio event listeners
   useEffect(() => {
-    console.log("Setting up audio event listeners");
     const audio = audioRef.current;
     if (!audio) return;
 

@@ -1,7 +1,6 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 import { Music } from "@/types/domain";
-
 export const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
@@ -26,9 +25,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Handle unauthorized access
-      Cookies.remove("token");
-      window.location.href = "/login";
+      console.log("401");
     }
     return Promise.reject(error);
   }

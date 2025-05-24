@@ -1,18 +1,23 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+// Add paths that don't require authentication
+const publicPaths = ["/login", "/register"];
+
 export function middleware(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
-  const isAuthPage =
-    request.nextUrl.pathname.startsWith("/login") ||
-    request.nextUrl.pathname.startsWith("/register");
+  const { pathname } = request.nextUrl;
 
-  if (!token && !isAuthPage) {
-    return NextResponse.redirect(new URL("/login", request.url));
+  // Allow access to public paths
+  if (publicPaths.includes(pathname)) {
+    return NextResponse.next();
   }
 
-  if (token && isAuthPage) {
-    return NextResponse.redirect(new URL("/", request.url));
+  // If no token, redirect to login with return URL
+  if (!token) {
+    const url = new URL("/login", request.url);
+    url.searchParams.set("redirect", pathname);
+    return NextResponse.redirect(url);
   }
 
   return NextResponse.next();

@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/aliBordbar1992/musicstream-backend/internal/controllers"
+	"github.com/aliBordbar1992/musicstream-backend/internal/controllers/websocket"
 	"github.com/aliBordbar1992/musicstream-backend/internal/domain"
 	"github.com/aliBordbar1992/musicstream-backend/internal/repositories"
 	"github.com/aliBordbar1992/musicstream-backend/internal/services"
@@ -41,7 +42,7 @@ func RegisterRoutes(r *gin.Engine) {
 	playlistController := controllers.NewPlaylistController(playlistService)
 	artistController := controllers.NewArtistController(artistService)
 	queueController := controllers.NewQueueController(queueService)
-	websocketController := controllers.NewWebSocketController(listenerService)
+	websocketController := websocket.NewWebSocketController(listenerService)
 
 	// Health check
 	r.GET("/health", func(c *gin.Context) {

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { MusicList } from "@/components/features/music/MusicList";
 import { music } from "@/lib/api";
-import { Music, PlayerTrack } from "@/types/domain";
+import { Music } from "@/types/domain";
 import { LayoutContent } from "@/components/layouts/LayoutContent";
 import { useWebSocketSession } from "@/store/WebSocketSessionContext";
 import { eventBus, EventTypes } from "@/lib/eventBus";
@@ -19,8 +19,7 @@ export default function WebSocketTestPage() {
   const [musicList, setMusicList] = useState<Music[]>([]);
   const [loading, setLoading] = useState(true);
   const [sessionEvents, setSessionEvents] = useState<SessionEvent[]>([]);
-  const { isConnected, currentMusicId, listeners, connect } =
-    useWebSocketSession();
+  const { isConnected, currentMusicId, listeners } = useWebSocketSession();
 
   useEffect(() => {
     const fetchMusic = async () => {
@@ -86,19 +85,6 @@ export default function WebSocketTestPage() {
       });
     };
   }, []);
-
-  // Listen to player events to connect to WebSocket session
-  useEffect(() => {
-    const handlePlay = (track: PlayerTrack) => {
-      connect(track.id);
-    };
-
-    eventBus.on("player:play", handlePlay);
-
-    return () => {
-      eventBus.off("player:play", handlePlay);
-    };
-  }, [connect]);
 
   return (
     <LayoutContent>

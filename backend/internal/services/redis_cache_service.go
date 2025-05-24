@@ -34,6 +34,9 @@ func (s *redisCacheService) Set(key string, value interface{}, expiration time.D
 func (s *redisCacheService) Get(key string, dest interface{}) error {
 	data, err := s.client.Get(s.ctx, key).Bytes()
 	if err != nil {
+		if err == redis.Nil {
+			return domain.NilCache
+		}
 		return err
 	}
 

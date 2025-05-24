@@ -1,6 +1,8 @@
 package domain
 
-import "time"
+import (
+	"time"
+)
 
 // Listener represents a user listening to a music track
 type Listener struct {
@@ -10,11 +12,20 @@ type Listener struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+type CacheError string
+
+func (e CacheError) Error() string { return string(e) }
+
+func (CacheError) CacheError() {}
+
+const NilCache = CacheError("cache: nil")
+
 // CacheService defines the interface for caching operations
 type CacheService interface {
 	// Set stores a value in the cache with an optional expiration time
 	Set(key string, value interface{}, expiration time.Duration) error
 	// Get retrieves a value from the cache
+	// if the key does not exist, it returns domain.NilCache error
 	Get(key string, dest interface{}) error
 	// Delete removes a value from the cache
 	Delete(key string) error
@@ -30,6 +41,8 @@ type ListenerService interface {
 	UpdatePosition(username string, musicID uint, position float64) error
 	// StopListening removes a user from the listeners of a music track
 	StopListening(username string, musicID uint) error
+	// GetCurrentlyListeningUser returns the currently playing music track for a user
+	GetCurrentlyListeningUser(username string) (*Listener, error)
 	// GetCurrentListeners returns all current listeners for a music track
 	GetCurrentListeners(musicID uint) ([]*Listener, error)
 	// GetListener returns a specific listener's information
