@@ -1,102 +1,197 @@
-import { useState } from "react";
-import { Listener, WebSocketMessage } from "./types";
-import { EventTypes } from "@/lib/eventBus";
+import { useState, useEffect, useRef } from "react";
+import { Listener } from "./types";
 import { eventBus } from "@/lib/eventBus";
+import { PlayerTrack } from "@/types/domain";
+import { useWebSocketConnection } from "./useWebSocketConnection";
 
-export function useSessionState(
-  wsRef: React.RefObject<WebSocket | null>,
-  updateLastActivity: () => void,
-  sendMessage: (message: WebSocketMessage) => Promise<void>,
-  connect: () => Promise<void>
-) {
-  const [currentMusicId, setCurrentMusicId] = useState<number | null>(null);
+export function useListenerState() {
   const [listeners, setListeners] = useState<Listener[]>([]);
 
-  const handleUserJoined = (data: EventTypes["session:userJoined"]) => {
-    console.log("User joined", data);
-    console.log("Listeners before", listeners);
-    setListeners((prev) => [
-      ...prev,
-      { username: data.username, position: data.position },
-    ]);
-    console.log("Listeners after", listeners);
+  const addListener = (username: string, position: number) => {
+    // check if listener already exists
+    if (listeners.find((l) => l.username === username)) {
+      return;
+    }
+
+    setListeners((prev) => [...prev, { username, position }]);
   };
 
-  const handleUserLeft = (data: EventTypes["session:userLeft"]) => {
-    console.log("User left", data);
-    setListeners((prev) => prev.filter((l) => l.username !== data.username));
+  const removeListener = (username: string) => {
+    setListeners((prev) => prev.filter((l) => l.username !== username));
   };
 
-  const handleProgressUpdate = (data: EventTypes["session:progressUpdate"]) => {
+  const updateListenerProgress = (username: string, position: number) => {
     setListeners((prev) =>
-      prev.map((l) =>
-        l.username === data.username ? { ...l, position: data.position } : l
-      )
+      prev.map((l) => (l.username === username ? { ...l, position } : l))
     );
   };
 
-  const clearSession = () => {
-    setCurrentMusicId(null);
-    setListeners([]);
-  };
+  return { listeners, addListener, removeListener, updateListenerProgress };
+}
 
-  const joinSession = async (musicId: number, position: number | null) => {
-    console.log("Joining session", musicId, position);
-    try {
-      if (wsRef.current?.readyState !== WebSocket.OPEN) {
-        console.log("WebSocket not open, connecting...");
-        await connect();
-      }
+export function useSessionState() {
+  const { isConnected, sendMessage, updateLastActivity } =
+    useWebSocketConnection();
+  const [joinSessionRequest, setJoinSessionRequest] = useState<{
+    musicId: number;
+    position: number | null;
+  } | null>(null);
+  const [currentSession, setCurrentSession] = useState<{
+    musicId: number;
+    position: number | null;
+  } | null>(null);
+  const lastProgressUpdateRef = useRef<number>(0);
 
-      updateLastActivity();
-      await sendMessage({
-        t: "join_session",
-        p: { music_id: musicId, position: position },
-      });
-      setCurrentMusicId(musicId);
-      clearSession();
-
-      // Request current listeners after joining
-      await sendMessage({
-        t: "get_listeners",
-        p: {},
-      });
-    } catch (error) {
-      console.error("Failed to join session:", error);
-      eventBus.emit("session:error", {
-        message: "Failed to join session",
-      });
+  // Handle WebSocket connection status changes and join session
+  useEffect(() => {
+    if (!isConnected || !joinSessionRequest) {
+      console.log(
+        "not connected or no join session request",
+        isConnected,
+        joinSessionRequest
+      );
+      return;
     }
-  };
+
+    const joinSession = async () => {
+      console.log(
+        "joining session for music",
+        joinSessionRequest.musicId,
+        "at position",
+        joinSessionRequest.position
+      );
+      try {
+        await sendMessage(
+          JSON.stringify({
+            t: "join_session",
+            p: {
+              music_id: joinSessionRequest.musicId,
+              position: joinSessionRequest.position,
+            },
+          })
+        );
+
+        // Request current listeners after joining
+        await sendMessage(
+          JSON.stringify({
+            t: "get_listeners",
+            p: {},
+          })
+        );
+
+        setCurrentSession({
+          musicId: joinSessionRequest.musicId,
+          position: joinSessionRequest.position,
+        });
+        setJoinSessionRequest(null);
+      } catch (error) {
+        console.error("Failed to join session:", error);
+        eventBus.emit("session:error", {
+          message: "Failed to join session",
+        });
+      }
+    };
+
+    joinSession();
+  }, [isConnected, joinSessionRequest, sendMessage]);
 
   const leaveSession = async () => {
-    console.log("Leaving session");
-    if (wsRef.current?.readyState === WebSocket.OPEN && currentMusicId) {
-      updateLastActivity();
-      try {
-        await sendMessage({
-          t: "leave_session",
-          p: {},
-        });
-        clearSession();
-      } catch (error) {
-        console.error("Failed to leave session:", error);
-        eventBus.emit("session:error", {
-          message: "Failed to leave session",
-        });
+    console.log("leaving session...", currentSession?.musicId);
+    try {
+      if (isConnected) {
+        await sendMessage(
+          JSON.stringify({
+            t: "leave_session",
+            p: {},
+          })
+        );
       }
+
+      setCurrentSession(null);
+    } catch (error) {
+      console.error("Failed to leave session:", error);
+      eventBus.emit("session:error", {
+        message: "Failed to leave session",
+      });
     }
+  };
+
+  const guardSession = () => {
+    if (!currentSession || !isConnected) {
+      throw new Error("Not in a music session.");
+    }
+  };
+
+  const play = async (track: PlayerTrack) => {
+    console.log("playing track", track);
+    if (currentSession?.musicId !== track.id) {
+      console.log("setting join session request", track.id, track.position);
+      setJoinSessionRequest({ musicId: track.id, position: track.position });
+    }
+  };
+
+  const pause = async () => {
+    console.log("pausing");
+    guardSession();
+
+    await sendMessage(
+      JSON.stringify({
+        t: "pause",
+        p: {},
+      })
+    );
+    updateLastActivity();
+  };
+
+  const resume = async () => {
+    console.log("resuming");
+    guardSession();
+
+    await sendMessage(
+      JSON.stringify({
+        t: "resume",
+        p: {},
+      })
+    );
+    updateLastActivity();
+  };
+
+  const seek = async (position: number) => {
+    console.log("seeking to", position);
+    guardSession();
+    await sendMessage(
+      JSON.stringify({
+        t: "seek",
+        p: { p: position },
+      })
+    );
+    updateLastActivity();
+  };
+
+  const progress = async (position: number) => {
+    guardSession();
+
+    const now = Date.now();
+    if (now - lastProgressUpdateRef.current >= 1000) {
+      // Only send if 1 second has passed
+      await sendMessage(
+        JSON.stringify({
+          t: "progress",
+          p: { p: position },
+        })
+      );
+      lastProgressUpdateRef.current = now;
+    }
+    updateLastActivity();
   };
 
   return {
-    currentMusicId,
-    listeners,
-    setListeners,
-    handleUserJoined,
-    handleUserLeft,
-    handleProgressUpdate,
-
-    joinSession,
+    currentSession,
+    play,
+    pause,
+    resume,
+    seek,
+    progress,
     leaveSession,
   };
 }

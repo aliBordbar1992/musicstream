@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect } from "react";
 import { eventBus } from "@/lib/eventBus";
 import { WebSocketSessionContextType } from "./websocket/types";
 import { useWebSocketConnection } from "./websocket/useWebSocketConnection";
-import { useSessionState } from "./websocket/useSessionState";
+import { useListenerState, useSessionState } from "./websocket/useSessionState";
 import { usePlayerEvents } from "./websocket/usePlayerEvents";
 
 const WebSocketSessionContext =
@@ -15,66 +15,42 @@ export function WebSocketSessionProvider({
 }: {
   children: React.ReactNode;
 }) {
+  console.log("websocket session provider");
   const {
     isConnected,
     wsRef,
-    connect,
     disconnect,
-    sendMessage,
     updateLastActivity,
+    setMessageHandler,
   } = useWebSocketConnection();
-  const {
-    currentMusicId,
-    listeners,
-    setListeners,
-    handleUserJoined,
-    handleUserLeft,
-    handleProgressUpdate,
-    joinSession,
-    leaveSession,
-  } = useSessionState(wsRef, updateLastActivity, sendMessage, connect);
 
-  /*   // Join a music session
-  const joinSession = (musicId: number, position: number | null) => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      joinSessionState(musicId, position, sendMessage, updateLastActivity);
-    }
-  };
+  const { seek, currentSession } = useSessionState();
 
-  // Leave current music session
-  const leaveSession = () => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      leaveSessionState(sendMessage, updateLastActivity);
-    }
-  }; */
+  const { listeners, addListener, removeListener, updateListenerProgress } =
+    useListenerState();
+
+  // Set up player events
+  usePlayerEvents();
 
   // Handle WebSocket messages
   useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
+    console.log("websocket session provider use effect");
+    const musicSessionMessageHandler = (event: MessageEvent) => {
       updateLastActivity();
       try {
         const data = JSON.parse(event.data);
         switch (data.t) {
           case "user_joined":
-            handleUserJoined({
-              username: data.p.u,
-              position: data.p.p || 0,
-            });
+            addListener(data.p.u, data.p.p || 0);
             break;
           case "user_left":
-            handleUserLeft({ username: data.p.u });
+            removeListener(data.p.u);
             break;
           case "progress":
-            handleProgressUpdate({
-              username: data.p.u,
-              position: data.p.p,
-            });
+            updateListenerProgress(data.p.u, data.p.p);
             break;
           case "seek":
-            handleProgressUpdate({
-              username: data.p.u,
-              position: data.p.p,
-            });
+            updateListenerProgress(data.p.u, data.p.p);
             break;
           case "pause":
             eventBus.emit("session:pauseUpdate", { username: data.p.u });
@@ -83,7 +59,12 @@ export function WebSocketSessionProvider({
             eventBus.emit("session:resumeUpdate", { username: data.p.u });
             break;
           case "current_listeners":
-            setListeners(data.p.l);
+            const listeners = data.p.l;
+            listeners.forEach(
+              (listener: { username: string; position: number }) => {
+                addListener(listener.username, listener.position);
+              }
+            );
             break;
         }
       } catch (error) {
@@ -94,46 +75,28 @@ export function WebSocketSessionProvider({
       }
     };
 
-    if (wsRef.current) {
-      wsRef.current.onmessage = handleMessage;
-    }
+    setMessageHandler(musicSessionMessageHandler);
 
     return () => {
-      if (wsRef.current) {
-        wsRef.current.onmessage = null;
-      }
+      setMessageHandler(() => {});
     };
   }, [
     wsRef,
-    handleUserJoined,
-    handleUserLeft,
-    handleProgressUpdate,
-    setListeners,
     updateLastActivity,
+    setMessageHandler,
+    addListener,
+    removeListener,
+    updateListenerProgress,
+    seek,
   ]);
-
-  // Set up player events
-  usePlayerEvents(
-    wsRef,
-    isConnected,
-    currentMusicId,
-    updateLastActivity,
-    connect,
-    joinSession,
-    leaveSession,
-    sendMessage
-  );
 
   return (
     <WebSocketSessionContext.Provider
       value={{
         isConnected,
-        currentMusicId,
+        currentMusicId: currentSession === null ? null : currentSession.musicId,
         listeners,
-        connect,
         disconnect,
-        joinSession,
-        leaveSession,
       }}
     >
       {children}

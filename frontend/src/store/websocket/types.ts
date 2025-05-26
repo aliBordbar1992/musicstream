@@ -5,10 +5,8 @@ export interface WebSocketSessionContextType {
     username: string;
     position: number;
   }>;
-  connect: () => void;
+
   disconnect: () => void;
-  joinSession: (musicId: number, position: number | null) => void;
-  leaveSession: () => void;
 }
 
 export interface Listener {
@@ -16,7 +14,7 @@ export interface Listener {
   position: number;
 }
 
-type WebSocketPayload =
+export type WebSocketPayload =
   | { music_id: number; position: number | null } // join_session
   | Record<string, never> // pause, resume, get_listeners
   | { p: number } // seek, progress
@@ -28,6 +26,9 @@ export interface WebSocketMessage {
   t: string;
   p: WebSocketPayload;
 }
+
+// Raw message type that WebSocket actually sends/receives
+export type RawMessage = string | ArrayBuffer | Blob;
 
 export const INACTIVITY_TIMEOUT = 30000; // 30 seconds
 export const INACTIVITY_CHECK_INTERVAL = 5000; // 5 seconds

@@ -11,6 +11,11 @@ export type EventTypes = {
   "player:seek": number;
   "player:progress": number;
   "player:close": void;
+  /*   "player:volumeChange": number;
+  "player:playbackRateChange": number;
+  "player:trackEnd": void;
+  "player:trackError": Error;
+  "player:buffering": boolean; */
   // WebSocket Session Events
   "session:userJoined": { username: string; position: number };
   "session:userLeft": { username: string };
