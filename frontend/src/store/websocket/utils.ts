@@ -3,12 +3,10 @@
 import Cookies from "js-cookie";
 import { API_URL } from "@/lib/api";
 import { eventBus } from "@/lib/eventBus";
+import { ConnectionManager } from "./connectionState";
 
-export function shouldSkipConnection(
-  isConnected: boolean,
-  isConnecting: boolean
-): boolean {
-  if (isConnected || isConnecting) {
+export function shouldSkipConnection(manager: ConnectionManager): boolean {
+  if (manager.state.isConnected || manager.state.isConnecting) {
     console.log("Already connected or connecting, skipping connection attempt");
     return true;
   }
@@ -39,28 +37,25 @@ export function createWebSocket(token: string): WebSocket {
   return new WebSocket(`${wsUrl}/ws/listen?token=${token}`);
 }
 
-export function cleanupExistingConnection(
-  wsRef: React.RefObject<WebSocket | null>,
-  reconnectTimeoutRef: React.RefObject<NodeJS.Timeout | null>
-): void {
+export function cleanupExistingConnection(manager: ConnectionManager): void {
   if (
-    wsRef.current?.readyState === WebSocket.OPEN ||
-    wsRef.current?.readyState === WebSocket.CONNECTING
+    manager.refs.ws.current?.readyState === WebSocket.OPEN ||
+    manager.refs.ws.current?.readyState === WebSocket.CONNECTING
   ) {
-    wsRef.current.close();
+    manager.refs.ws.current.close();
   }
-  if (reconnectTimeoutRef.current) {
-    clearTimeout(reconnectTimeoutRef.current);
-    reconnectTimeoutRef.current = null;
+  if (manager.refs.reconnectTimeout.current) {
+    clearTimeout(manager.refs.reconnectTimeout.current);
+    manager.refs.reconnectTimeout.current = null;
   }
 }
 
 export function scheduleReconnect(
-  reconnectTimeoutRef: React.RefObject<NodeJS.Timeout | null>,
+  manager: ConnectionManager,
   connectFn: () => Promise<void>,
   delayMs: number = 5000
 ): void {
-  reconnectTimeoutRef.current = setTimeout(() => {
+  manager.refs.reconnectTimeout.current = setTimeout(() => {
     connectFn().catch(console.error);
   }, delayMs);
 }
@@ -72,12 +67,12 @@ export function emitSessionError(message: string): void {
 export function handleWebSocketError(
   error: Event | string,
   connectionTimeout: NodeJS.Timeout,
-  setIsConnecting: (v: boolean) => void,
+  manager: ConnectionManager,
   reject: (err: Error) => void
 ): void {
   console.error("WebSocket error:", error);
   clearTimeout(connectionTimeout);
-  setIsConnecting(false);
+  manager.dispatch({ type: "ERROR" });
   const wsError = new Error("WebSocket connection error");
   emitSessionError(wsError.message);
   reject(wsError);
@@ -86,34 +81,30 @@ export function handleWebSocketError(
 export function handleWebSocketClose(
   event: CloseEvent,
   connectionTimeout: NodeJS.Timeout,
-  setIsConnected: (v: boolean) => void,
-  setIsConnecting: (v: boolean) => void,
-  reconnectTimeoutRef: React.RefObject<NodeJS.Timeout | null>,
+  manager: ConnectionManager,
   connect: () => Promise<void>,
   reject: (err: Error) => void
 ): void {
   console.log("WebSocket closed:", event);
   clearTimeout(connectionTimeout);
-  setIsConnected(false);
-  setIsConnecting(false);
+  manager.dispatch({ type: "DISCONNECTED" });
   eventBus.emit("session:disconnected");
 
   if (event.code !== 1000) {
-    scheduleReconnect(reconnectTimeoutRef, connect);
+    scheduleReconnect(manager, connect);
     reject(new Error(`WebSocket closed with code ${event.code}`));
   }
 }
 
 export function setupWebSocketMessageHandler(
   ws: WebSocket,
-  updateLastActivity: () => void,
-  messageHandlerRef: React.RefObject<((e: MessageEvent) => void) | null>
+  manager: ConnectionManager
 ): void {
   ws.onmessage = (event) => {
-    updateLastActivity();
-    if (messageHandlerRef.current) {
+    manager.dispatch({ type: "ACTIVITY_UPDATE" });
+    if (manager.refs.messageHandler.current) {
       try {
-        messageHandlerRef.current(event);
+        manager.refs.messageHandler.current(event);
       } catch (error) {
         console.error("Error in message handler:", error);
       }
@@ -123,21 +114,21 @@ export function setupWebSocketMessageHandler(
 
 export function setupInactivityInterval(
   checkInactivity: () => void,
-  intervalRef: React.RefObject<NodeJS.Timeout | null>,
+  manager: ConnectionManager,
   intervalMs: number
 ): void {
-  if (intervalRef.current) {
-    clearInterval(intervalRef.current);
+  if (manager.refs.inactivityCheckInterval.current) {
+    clearInterval(manager.refs.inactivityCheckInterval.current);
   }
-  intervalRef.current = setInterval(checkInactivity, intervalMs);
+  manager.refs.inactivityCheckInterval.current = setInterval(
+    checkInactivity,
+    intervalMs
+  );
 }
 
 export function handleWebSocketOpen(
   connectionTimeout: NodeJS.Timeout,
-  setIsConnected: (v: boolean) => void,
-  setIsConnecting: (v: boolean) => void,
-  updateLastActivity: () => void,
-  inactivityCheckIntervalRef: React.RefObject<NodeJS.Timeout | null>,
+  manager: ConnectionManager,
   checkInactivity: () => void,
   INACTIVITY_CHECK_INTERVAL: number,
   processMessageQueue: () => Promise<void>,
@@ -145,69 +136,74 @@ export function handleWebSocketOpen(
 ): void {
   console.log("WebSocket connected");
   clearTimeout(connectionTimeout);
-  setIsConnected(true);
-  setIsConnecting(false);
+
+  // First update activity to ensure we have a valid timestamp
+  manager.dispatch({ type: "ACTIVITY_UPDATE" });
+
+  // Then mark as connected
+  manager.dispatch({ type: "CONNECTED" });
+
+  // Emit connected event after state is updated
   eventBus.emit("session:connected");
-  updateLastActivity();
 
-  setupInactivityInterval(
-    checkInactivity,
-    inactivityCheckIntervalRef,
-    INACTIVITY_CHECK_INTERVAL
-  );
+  // Setup inactivity check
+  setupInactivityInterval(checkInactivity, manager, INACTIVITY_CHECK_INTERVAL);
 
+  // Process any queued messages
   processMessageQueue().catch(console.error);
+
+  // Resolve the connection promise
   resolve();
 }
 
-export async function connect(
-  isConnected: boolean,
-  isConnecting: boolean,
-  setIsConnected: (v: boolean) => void,
-  setIsConnecting: (v: boolean) => void,
-  wsRef: React.RefObject<WebSocket | null>,
-  reconnectTimeoutRef: React.RefObject<NodeJS.Timeout | null>,
-  messageHandlerRef: React.RefObject<((e: MessageEvent) => void) | null>,
-  updateLastActivity: () => void,
-  checkInactivity: () => void,
-  inactivityCheckIntervalRef: React.RefObject<NodeJS.Timeout | null>,
-  INACTIVITY_CHECK_INTERVAL: number,
-  processMessageQueue: () => Promise<void>
-): Promise<void> {
-  console.log("connecting", isConnected, isConnecting);
+export async function connect(manager: ConnectionManager): Promise<void> {
+  console.log("connect called", manager.state);
   return new Promise((resolve, reject) => {
-    if (shouldSkipConnection(isConnected, isConnecting)) {
+    if (shouldSkipConnection(manager)) {
+      console.log("shouldSkipConnection true, resolve");
       resolve();
       return;
     }
 
-    setIsConnecting(true);
-
+    console.log("shouldSkipConnection false, try to connect");
     try {
       const token = getTokenOrThrow();
-      cleanupExistingConnection(wsRef, reconnectTimeoutRef);
+      cleanupExistingConnection(manager);
 
       const connectionTimeout = setupConnectionTimeout(10000, () => {
         const error = new Error("WebSocket connection timeout");
         emitSessionError(error.message);
-        setIsConnecting(false);
-        wsRef.current?.close();
+        manager.dispatch({ type: "ERROR" });
+        manager.refs.ws.current?.close();
         reject(error);
       });
 
       const ws = createWebSocket(token);
-      wsRef.current = ws;
+      manager.refs.ws.current = ws;
 
       ws.onopen = () =>
         handleWebSocketOpen(
           connectionTimeout,
-          setIsConnected,
-          setIsConnecting,
-          updateLastActivity,
-          inactivityCheckIntervalRef,
-          checkInactivity,
-          INACTIVITY_CHECK_INTERVAL,
-          processMessageQueue,
+          manager,
+          () => {
+            const now = Date.now();
+            if (now - manager.state.lastActivity >= 30000) {
+              console.log(
+                "Inactivity timeout reached, disconnecting WebSocket"
+              );
+              if (manager.refs.ws.current) {
+                manager.refs.ws.current.close(1000, "Inactivity timeout");
+              }
+            }
+          },
+          5000,
+          async () => {
+            if (manager.refs.ws.current?.readyState === WebSocket.OPEN) {
+              // Process any queued messages
+              return Promise.resolve();
+            }
+            return Promise.resolve();
+          },
           resolve
         );
 
@@ -215,34 +211,18 @@ export async function connect(
         handleWebSocketClose(
           event,
           connectionTimeout,
-          setIsConnected,
-          setIsConnecting,
-          reconnectTimeoutRef,
-          () =>
-            connect(
-              isConnected,
-              isConnecting,
-              setIsConnected,
-              setIsConnecting,
-              wsRef,
-              reconnectTimeoutRef,
-              messageHandlerRef,
-              updateLastActivity,
-              checkInactivity,
-              inactivityCheckIntervalRef,
-              INACTIVITY_CHECK_INTERVAL,
-              processMessageQueue
-            ),
+          manager,
+          () => connect(manager),
           reject
         );
 
       ws.onerror = (error) =>
-        handleWebSocketError(error, connectionTimeout, setIsConnecting, reject);
+        handleWebSocketError(error, connectionTimeout, manager, reject);
 
-      setupWebSocketMessageHandler(ws, updateLastActivity, messageHandlerRef);
+      setupWebSocketMessageHandler(ws, manager);
     } catch (error) {
       console.error("Failed to create WebSocket connection:", error);
-      setIsConnecting(false);
+      manager.dispatch({ type: "ERROR" });
       const wsError = new Error("Failed to create WebSocket connection");
       emitSessionError(wsError.message);
       reject(wsError);

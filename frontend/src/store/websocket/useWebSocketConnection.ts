@@ -1,11 +1,12 @@
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useRef, useReducer, useCallback, useEffect } from "react";
 import { eventBus } from "@/lib/eventBus";
-import {
-  INACTIVITY_TIMEOUT,
-  INACTIVITY_CHECK_INTERVAL,
-  RawMessage,
-} from "./types";
+import { RawMessage } from "./types";
 import { connect } from "./utils";
+import {
+  connectionReducer,
+  initialConnectionState,
+  ConnectionManager,
+} from "./connectionState";
 
 // Message queue type
 type QueuedMessage = {
@@ -14,17 +15,37 @@ type QueuedMessage = {
 };
 
 export function useWebSocketConnection() {
-  const [isConnected, setIsConnected] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
+  const [state, dispatch] = useReducer(
+    connectionReducer,
+    initialConnectionState
+  );
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const lastActivityRef = useRef<number>(Date.now());
   const inactivityCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const messageQueue = useRef<QueuedMessage[]>([]);
   const isReconnecting = useRef(false);
   const messageHandlerRef = useRef<((event: MessageEvent) => void) | null>(
     null
   );
+  const connectionAttemptRef = useRef<Promise<void> | null>(null);
+
+  // Create a stable ref for the connection manager
+  const managerRef = useRef<ConnectionManager>({
+    state,
+    dispatch,
+    refs: {
+      ws: wsRef,
+      reconnectTimeout: reconnectTimeoutRef,
+      inactivityCheckInterval: inactivityCheckIntervalRef,
+      messageHandler: messageHandlerRef,
+    },
+  });
+
+  // Update the manager's state reference when state changes
+  useEffect(() => {
+    console.log("useWebSocketConnection useEffect mount", state);
+    managerRef.current.state = state;
+  }, [state]);
 
   const disconnect = useCallback(() => {
     console.log("Disconnecting from WebSocket");
@@ -39,46 +60,12 @@ export function useWebSocketConnection() {
       clearInterval(inactivityCheckIntervalRef.current);
       inactivityCheckIntervalRef.current = null;
     }
-    setIsConnected(false);
-    setIsConnecting(false);
+    dispatch({ type: "DISCONNECTED" });
   }, []);
 
-  const checkInactivity = useCallback(() => {
-    const now = Date.now();
-    if (now - lastActivityRef.current >= INACTIVITY_TIMEOUT) {
-      console.log("Inactivity timeout reached, disconnecting WebSocket");
-      disconnect();
-    }
-  }, [disconnect]);
-
-  const cc = useCallback(async () => {
-    console.log("cc called", isConnected, isConnecting);
-    await connect(
-      isConnected,
-      isConnecting,
-      setIsConnected,
-      setIsConnecting,
-      wsRef,
-      reconnectTimeoutRef,
-      messageHandlerRef,
-      updateLastActivity,
-      checkInactivity,
-      inactivityCheckIntervalRef,
-      INACTIVITY_CHECK_INTERVAL,
-      processMessageQueue
-    );
-  }, [checkInactivity, isConnected, isConnecting]);
-
-  useEffect(() => {
-    console.log("isConnected", isConnected);
-    if (!isConnected && !isConnecting) {
-      cc();
-    }
-  }, [cc, isConnected, isConnecting]);
-
-  const updateLastActivity = () => {
-    lastActivityRef.current = Date.now();
-  };
+  const updateLastActivity = useCallback(() => {
+    dispatch({ type: "ACTIVITY_UPDATE" });
+  }, []);
 
   const processMessageQueue = async () => {
     if (
@@ -93,35 +80,72 @@ export function useWebSocketConnection() {
       const { message } = messageQueue.current[0];
       try {
         wsRef.current.send(message);
-        messageQueue.current.shift(); // Remove the sent message
+        messageQueue.current.shift();
       } catch (error) {
         console.error("Failed to send message:", error);
-        break; // Stop processing if we encounter an error
+        break;
       }
     }
   };
 
+  const connectWebSocket = useCallback(async () => {
+    console.log("connectWebSocket called", state);
+
+    // If we're already connected or connecting, don't try to connect again
+    if (state.isConnected || state.isConnecting) {
+      console.log(
+        "Already connected or connecting, skipping connection attempt"
+      );
+      return;
+    }
+
+    // If there's an ongoing connection attempt, wait for it
+    if (connectionAttemptRef.current) {
+      console.log("Connection attempt in progress, waiting...");
+      await connectionAttemptRef.current;
+      return;
+    }
+
+    // Start a new connection attempt
+    dispatch({ type: "CONNECTING" });
+    connectionAttemptRef.current = connect(managerRef.current);
+
+    try {
+      await connectionAttemptRef.current;
+    } finally {
+      connectionAttemptRef.current = null;
+    }
+  }, [state.isConnected, state.isConnecting]);
+
+  useEffect(() => {
+    console.log(
+      "useEffect connectWebSocket",
+      state.isConnected,
+      state.isConnecting
+    );
+    if (!state.isConnected && !state.isConnecting) {
+      connectWebSocket();
+    }
+  }, [state.isConnected, state.isConnecting, connectWebSocket]);
+
   const sendMessage = async (message: RawMessage) => {
     updateLastActivity();
 
-    // If WebSocket is not open, try to reconnect
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
       console.log("WebSocket not open, attempting to reconnect...");
 
-      // Add message to queue
       messageQueue.current.push({
         message,
         timestamp: Date.now(),
       });
 
-      // If already reconnecting, just queue the message
       if (isReconnecting.current) {
         return;
       }
 
       try {
         isReconnecting.current = true;
-        await cc();
+        await connectWebSocket();
         await processMessageQueue();
       } catch (error) {
         console.error("Failed to reconnect:", error);
@@ -134,19 +158,17 @@ export function useWebSocketConnection() {
       return;
     }
 
-    // If WebSocket is open, send message directly
     try {
       wsRef.current.send(message);
     } catch (error) {
       console.error("Failed to send message:", error);
-      // If send fails, queue the message and attempt reconnection
       messageQueue.current.push({
         message,
         timestamp: Date.now(),
       });
       try {
         isReconnecting.current = true;
-        await cc();
+        await connectWebSocket();
         await processMessageQueue();
       } catch (error) {
         console.error("Failed to reconnect after send error:", error);
@@ -159,7 +181,6 @@ export function useWebSocketConnection() {
     }
   };
 
-  // Set message handler
   const setMessageHandler = useCallback(
     (handler: (event: MessageEvent) => void) => {
       messageHandlerRef.current = handler;
@@ -168,10 +189,10 @@ export function useWebSocketConnection() {
   );
 
   return {
-    isConnected,
-    isConnecting,
+    isConnected: state.isConnected,
+    isConnecting: state.isConnecting,
     wsRef,
-    connect: cc,
+    connect: connectWebSocket,
     disconnect,
     sendMessage,
     updateLastActivity,
