@@ -46,12 +46,14 @@ export default function Home() {
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-primary-600 to-secondary-600 opacity-90" />
                 <div className="relative px-8 py-16 md:py-24">
-                  <h1 className="text-4xl md:text-6xl font-bold text-neutral-900 dark:text-white mb-4">
-                    Your Music, Your Way
+                  <h1 className="text-4xl md:text-6xl font-bold text-neutral-900 dark:text-white mb-2">
+                    Listen
                   </h1>
+                  <h2 className="text-5xl md:text-7xl font-bold text-neutral-900 dark:text-white mb-4 pl-4">
+                    In Sync
+                  </h2>
                   <p className="text-lg md:text-xl text-neutral-700 dark:text-neutral-200 max-w-2xl">
-                    Discover, stream, and share your favorite music with our
-                    modern streaming platform.
+                    Stay in perfect harmony, both in music and friends.
                   </p>
                 </div>
               </motion.div>

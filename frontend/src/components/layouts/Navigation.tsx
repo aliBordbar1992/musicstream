@@ -33,7 +33,7 @@ export default function Navigation() {
             href="/"
             className="text-xl font-bold text-neutral-900 dark:text-white"
           >
-            MusicStream
+            MuSync
           </Link>
 
           <div className="flex items-center space-x-8">

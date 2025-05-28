@@ -5,7 +5,7 @@ import Providers from "@/components/layouts/Providers";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "MusicStream - Your Modern Music Platform",
+  title: "MuSync - Your Modern Music Platform",
   description: "A modern music streaming platform built with Next.js and Go",
 };
 
