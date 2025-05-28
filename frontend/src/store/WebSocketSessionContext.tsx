@@ -2,70 +2,131 @@
 
 import React, { createContext, useContext, useEffect } from "react";
 import { eventBus } from "@/lib/eventBus";
-import { WebSocketSessionContextType } from "./websocket/types";
-import { useWebSocketConnection } from "./websocket/useWebSocketConnection";
-import { useListenerState, useSessionState } from "./websocket/useSessionState";
-import { usePlayerEvents } from "./websocket/usePlayerEvents";
+import {
+  WebSocketSessionContextType,
+  WebSocketMessage,
+  WebSocketPayload,
+  PlayerEvent,
+} from "./websocket/types";
+import { useListeners } from "./websocket/useListeners";
+import { useWebSocket } from "./websocket/useWebSocket";
+import { API_URL } from "@/lib/api";
+import Cookies from "js-cookie";
 
 const WebSocketSessionContext =
   createContext<WebSocketSessionContextType | null>(null);
+
+// Type guards for WebSocket messages
+function isUserJoinedMessage(
+  message: WebSocketMessage
+): message is WebSocketMessage & {
+  t: "user_joined";
+  p: WebSocketPayload["user_joined"];
+} {
+  return message.t === "user_joined";
+}
+
+function isUserLeftMessage(
+  message: WebSocketMessage
+): message is WebSocketMessage & {
+  t: "user_left";
+  p: WebSocketPayload["user_left"];
+} {
+  return message.t === "user_left";
+}
+
+function isProgressMessage(
+  message: WebSocketMessage
+): message is WebSocketMessage & {
+  t: "progress";
+  p: WebSocketPayload["progress"];
+} {
+  return message.t === "progress";
+}
+
+function isSeekMessage(
+  message: WebSocketMessage
+): message is WebSocketMessage & { t: "seek"; p: WebSocketPayload["seek"] } {
+  return message.t === "seek";
+}
+
+function isPauseMessage(
+  message: WebSocketMessage
+): message is WebSocketMessage & { t: "pause"; p: WebSocketPayload["pause"] } {
+  return message.t === "pause";
+}
+
+function isResumeMessage(
+  message: WebSocketMessage
+): message is WebSocketMessage & {
+  t: "resume";
+  p: WebSocketPayload["resume"];
+} {
+  return message.t === "resume";
+}
+
+function isCurrentListenersMessage(
+  message: WebSocketMessage
+): message is WebSocketMessage & {
+  t: "current_listeners";
+  p: WebSocketPayload["current_listeners"];
+} {
+  return message.t === "current_listeners";
+}
 
 export function WebSocketSessionProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  console.log("websocket session provider");
+  const token = Cookies.get("token");
+  const wsUrl = token ? `${API_URL}/ws/listen?token=${token}` : null;
+
   const {
-    isConnected,
-    wsRef,
+    sendEvent,
     disconnect,
-    updateLastActivity,
+    getSocketState,
+    getSessionState,
     setMessageHandler,
-  } = useWebSocketConnection();
-
-  const { seek, currentSession } = useSessionState();
-
-  const { listeners, addListener, removeListener, updateListenerProgress } =
-    useListenerState();
-
-  // Set up player events
-  usePlayerEvents();
+  } = useWebSocket(wsUrl || "");
+  const {
+    listeners,
+    addListener,
+    removeListener,
+    updateListenerProgress,
+    updateListenerState,
+  } = useListeners();
 
   // Handle WebSocket messages
   useEffect(() => {
-    console.log("websocket session provider use effect");
-    const musicSessionMessageHandler = (event: MessageEvent) => {
-      updateLastActivity();
+    if (!wsUrl) return;
+
+    const handleMessage = (event: MessageEvent) => {
       try {
-        const data = JSON.parse(event.data);
-        switch (data.t) {
-          case "user_joined":
+        // Split the message by newlines in case multiple messages are concatenated
+        const messages = event.data.split("\n").filter(Boolean);
+
+        for (const message of messages) {
+          const data = JSON.parse(message) as WebSocketMessage;
+
+          if (isUserJoinedMessage(data)) {
             addListener(data.p.u, data.p.p || 0);
-            break;
-          case "user_left":
+          } else if (isUserLeftMessage(data)) {
             removeListener(data.p.u);
-            break;
-          case "progress":
+          } else if (isProgressMessage(data)) {
             updateListenerProgress(data.p.u, data.p.p);
-            break;
-          case "seek":
+          } else if (isSeekMessage(data)) {
+            updateListenerState(data.p.u, "seeking");
             updateListenerProgress(data.p.u, data.p.p);
-            break;
-          case "pause":
-            eventBus.emit("session:pauseUpdate", { username: data.p.u });
-            break;
-          case "resume":
-            eventBus.emit("session:resumeUpdate", { username: data.p.u });
-            break;
-          case "current_listeners":
-            const listeners = data.p.l;
-            listeners.forEach(
-              (listener: { username: string; position: number }) => {
-                addListener(listener.username, listener.position);
-              }
-            );
-            break;
+          } else if (isPauseMessage(data)) {
+            updateListenerState(data.p.u, "paused");
+          } else if (isResumeMessage(data)) {
+            updateListenerState(data.p.u, "playing");
+          } else if (isCurrentListenersMessage(data)) {
+            data.p.l.forEach((listener) => {
+              addListener(listener.username, listener.position);
+            });
+          }
         }
       } catch (error) {
         console.error("Failed to parse WebSocket message:", error, event);
@@ -75,26 +136,83 @@ export function WebSocketSessionProvider({
       }
     };
 
-    setMessageHandler(musicSessionMessageHandler);
+    // Set up event bus listeners for player events
+    const playHandler = (event: PlayerEvent) => {
+      sendEvent({
+        type: "play",
+        musicId: event.musicId,
+        timestamp: Date.now(),
+      });
+    };
+
+    const pauseHandler = (event: PlayerEvent) => {
+      sendEvent({
+        type: "pause",
+        musicId: event.musicId,
+        timestamp: Date.now(),
+      });
+    };
+
+    const resumeHandler = (event: PlayerEvent) => {
+      sendEvent({
+        type: "resume",
+        musicId: event.musicId,
+        timestamp: Date.now(),
+      });
+    };
+
+    const progressHandler = (event: PlayerEvent) => {
+      sendEvent({
+        type: "progress",
+        musicId: event.musicId,
+        progress: event.progress,
+        timestamp: Date.now(),
+      });
+    };
+
+    const closeHandler = (event: PlayerEvent) => {
+      sendEvent({
+        type: "close",
+        musicId: event.musicId,
+        timestamp: Date.now(),
+      });
+    };
+
+    eventBus.on("player:play", playHandler);
+    eventBus.on("player:pause", pauseHandler);
+    eventBus.on("player:resume", resumeHandler);
+    eventBus.on("player:progress", progressHandler);
+    eventBus.on("player:close", closeHandler);
+
+    // Set up WebSocket message handler using the manager from useWebSocket
+    setMessageHandler(handleMessage);
 
     return () => {
-      setMessageHandler(() => {});
+      eventBus.off("player:play", playHandler);
+      eventBus.off("player:pause", pauseHandler);
+      eventBus.off("player:resume", resumeHandler);
+      eventBus.off("player:progress", progressHandler);
+      eventBus.off("player:close", closeHandler);
     };
   }, [
-    wsRef,
-    updateLastActivity,
-    setMessageHandler,
+    wsUrl,
+    sendEvent,
     addListener,
     removeListener,
     updateListenerProgress,
-    seek,
+    setMessageHandler,
+    updateListenerState,
   ]);
+
+  const socketState = getSocketState();
+  const sessionState = getSessionState();
+  const currentMusicId = sessionState.isActive ? sessionState.musicId : null;
 
   return (
     <WebSocketSessionContext.Provider
       value={{
-        isConnected,
-        currentMusicId: currentSession === null ? null : currentSession.musicId,
+        isConnected: socketState.isConnected,
+        currentMusicId,
         listeners,
         disconnect,
       }}

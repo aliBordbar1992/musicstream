@@ -63,37 +63,69 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       }
 
       dispatch({ type: "PLAY_TRACK", payload: track });
-      eventBus.emit("player:play", track);
+      eventBus.emit("player:play", {
+        type: "play",
+        timestamp: Date.now(),
+        musicId: track.id,
+      });
     },
     [state.currentTrack?.id]
   );
 
   const clearTrack = useCallback(() => {
     dispatch({ type: "CLEAR_TRACK" });
-    eventBus.emit("player:clear");
-  }, []);
+    eventBus.emit("player:close", {
+      type: "close",
+      timestamp: Date.now(),
+      musicId: state.currentTrack?.id,
+    });
+  }, [state.currentTrack?.id]);
 
   const pause = useCallback(() => {
     dispatch({ type: "PAUSE" });
-    eventBus.emit("player:pause");
-  }, []);
+    eventBus.emit("player:pause", {
+      type: "pause",
+      timestamp: Date.now(),
+      musicId: state.currentTrack?.id,
+    });
+  }, [state.currentTrack?.id]);
 
   const resume = useCallback(() => {
     dispatch({ type: "RESUME" });
-    eventBus.emit("player:resume");
-  }, []);
+    eventBus.emit("player:resume", {
+      type: "resume",
+      timestamp: Date.now(),
+      musicId: state.currentTrack?.id,
+    });
+  }, [state.currentTrack?.id]);
 
   const setCurrentTrack = useCallback((track: PlayerTrack | null) => {
     dispatch({ type: "SET_TRACK", payload: track });
   }, []);
 
-  const seek = useCallback((position: number) => {
-    eventBus.emit("player:seek", position);
-  }, []);
+  const seek = useCallback(
+    (position: number) => {
+      eventBus.emit("player:seek", {
+        type: "seek",
+        timestamp: Date.now(),
+        musicId: state.currentTrack?.id,
+        progress: position,
+      });
+    },
+    [state.currentTrack?.id]
+  );
 
-  const updateProgress = useCallback((progress: number) => {
-    eventBus.emit("player:progress", progress);
-  }, []);
+  const updateProgress = useCallback(
+    (progress: number) => {
+      eventBus.emit("player:progress", {
+        type: "progress",
+        timestamp: Date.now(),
+        musicId: state.currentTrack?.id,
+        progress: progress,
+      });
+    },
+    [state.currentTrack?.id]
+  );
 
   return (
     <PlayerContext.Provider

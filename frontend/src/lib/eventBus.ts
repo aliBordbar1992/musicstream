@@ -1,21 +1,21 @@
 import mitt from "mitt";
-import { PlayerTrack } from "@/types/domain";
+import { PlayerEvent } from "@/store/websocket/types";
 
 // Define all possible event types
 export type EventTypes = {
   // Music Player Events
-  "player:play": PlayerTrack;
-  "player:clear": void;
-  "player:pause": void;
-  "player:resume": void;
-  "player:seek": number;
-  "player:progress": number;
-  "player:close": void;
+  "player:play": PlayerEvent;
+  "player:pause": PlayerEvent;
+  "player:resume": PlayerEvent;
+  "player:seek": PlayerEvent;
+  "player:progress": PlayerEvent;
+  "player:close": PlayerEvent;
   /*   "player:volumeChange": number;
   "player:playbackRateChange": number;
   "player:trackEnd": void;
   "player:trackError": Error;
   "player:buffering": boolean; */
+
   // WebSocket Session Events
   "session:userJoined": { username: string; position: number };
   "session:userLeft": { username: string };
