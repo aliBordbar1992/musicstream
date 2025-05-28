@@ -7,10 +7,7 @@ import ArtistSearch from "@/components/ui/ArtistSearch";
 import { music } from "@/lib/api";
 import { toast } from "react-hot-toast";
 import { Artist } from "@/types/domain";
-
-interface FileUploadFormProps {
-  onSuccess?: () => void;
-}
+import { FileUploadFormProps } from "@/types/components";
 
 export function FileUploadForm({ onSuccess }: FileUploadFormProps) {
   const [uploading, setUploading] = useState(false);

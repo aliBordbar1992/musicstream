@@ -3,17 +3,8 @@
 import { memo, useCallback } from "react";
 import { formatDuration } from "@/utils/formatDuration";
 import Image from "next/image";
-import { Music } from "@/types/domain";
 import { Trash2 } from "lucide-react";
-
-interface SongItemProps {
-  song: Music;
-  onPlay: (song: Music) => void;
-  onRemove?: (song: Music) => void;
-  showImage?: boolean;
-  className?: string;
-  showRemoveButton?: boolean;
-}
+import { SongItemProps } from "@/types/components";
 
 export const SongItem = memo(function SongItem({
   song,

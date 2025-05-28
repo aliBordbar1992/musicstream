@@ -5,15 +5,6 @@ import { Music } from "@/types/domain";
 import Image from "next/image";
 import { Loading } from "./Loading";
 
-interface MusicSearchProps {
-  value: string;
-  onChange: (value: string) => void;
-  onMusicSelect?: (music: Music) => void;
-  error?: string;
-  required?: boolean;
-  excludeIds?: number[]; // IDs to exclude from search results
-}
-
 export default function MusicSearch({
   value,
   onChange,

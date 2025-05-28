@@ -1,6 +1,10 @@
-import { WebSocketState, PlayerEvent, SessionState } from "./types";
-import { EventQueue } from "./eventQueue";
-import { SessionManager } from "./sessionManager";
+import {
+  WebSocketState,
+  PlayerEvent,
+  SessionState,
+  EventQueue,
+} from "@/types/domain";
+import { SessionManager } from "@/store/websocket/sessionManager";
 
 export class WebSocketManager {
   private ws: WebSocket | null = null;

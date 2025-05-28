@@ -3,16 +3,16 @@
 import React, { createContext, useContext, useEffect } from "react";
 import { eventBus } from "@/lib/eventBus";
 import {
-  WebSocketSessionContextType,
   WebSocketMessage,
   WebSocketPayload,
   PlayerEvent,
-} from "./websocket/types";
-import { useListeners } from "./websocket/useListeners";
-import { useWebSocket } from "./websocket/useWebSocket";
+} from "@/types/domain";
+import { useListeners } from "../hooks/useListeners";
+import { useWebSocket } from "../hooks/useWebSocket";
 import { API_URL } from "@/lib/api";
 import Cookies from "js-cookie";
 import { useAuth } from "@/store/AuthContext";
+import { WebSocketSessionContextType } from "@/types/context";
 
 const WebSocketSessionContext =
   createContext<WebSocketSessionContextType | null>(null);

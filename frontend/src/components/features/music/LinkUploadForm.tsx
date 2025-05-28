@@ -7,10 +7,7 @@ import ArtistSearch from "@/components/ui/ArtistSearch";
 import { music } from "@/lib/api";
 import { toast } from "react-hot-toast";
 import { Artist } from "@/types/domain";
-
-interface LinkUploadFormProps {
-  onSuccess?: () => void;
-}
+import { LinkUploadFormProps } from "@/types/components";
 
 export function LinkUploadForm({ onSuccess }: LinkUploadFormProps) {
   const [downloading, setDownloading] = useState(false);

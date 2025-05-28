@@ -8,11 +8,6 @@ import { SongItem } from "@/components/features/music/SongItem";
 import { Music } from "@/types/domain";
 import ConfirmModal from "@/components/common/ConfirmModal";
 
-interface PlaylistSongsProps {
-  playlistId: number;
-  onUpdate?: () => void;
-}
-
 export default function PlaylistSongs({
   playlistId,
   onUpdate,

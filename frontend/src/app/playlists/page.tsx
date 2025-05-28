@@ -12,11 +12,6 @@ import { Playlist } from "@/types/domain";
 import Button from "@/components/ui/Button";
 import { Loading } from "@/components/ui/Loading";
 
-interface EmptyStateProps {
-  searchQuery: string;
-  onCreateClick: () => void;
-}
-
 const EmptyState = ({ searchQuery, onCreateClick }: EmptyStateProps) => (
   <div className="flex flex-col items-center justify-center py-12 px-4">
     <div className="rounded-full bg-neutral-100 dark:bg-neutral-800 p-4 mb-4">

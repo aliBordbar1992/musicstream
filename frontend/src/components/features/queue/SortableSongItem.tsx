@@ -21,19 +21,6 @@ export interface SortableSong extends Song {
   musicId: number;
 }
 
-// Component props
-export interface SortableSongItemProps extends SortableSong {
-  onPlay: (song: SortableSong) => void;
-  onRemove: (id: number) => void;
-  className?: string;
-}
-
-// Types for drag handle props
-interface DragHandleProps {
-  attributes: DraggableAttributes;
-  listeners: SyntheticListenerMap | undefined;
-}
-
 // Pure component for drag handle
 const DragHandle = memo(({ attributes, listeners }: DragHandleProps) => (
   <button

@@ -7,12 +7,7 @@ import { Loading } from "@/components/ui/Loading";
 import { usePlayer } from "@/store/PlayerContext";
 import { music } from "@/lib/api";
 import { toast } from "react-hot-toast";
-
-interface MusicListProps {
-  music: Music[];
-  loading: boolean;
-  onDelete?: () => void;
-}
+import { MusicListProps } from "@/types/components";
 
 export function MusicList({
   music: musicList,

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Listener, ListenerState } from "./types";
+import { Listener, ListenerState } from "../store/websocket/types";
 
 export function useListeners() {
   const [listeners, setListeners] = useState<Listener[]>([]);

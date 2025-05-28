@@ -1,6 +1,4 @@
-import { Queue } from "./domain";
-import { PlayerTrack } from "./domain";
-import { User } from "./domain";
+import { PlayerTrack, Queue, Listener, User } from "@/types/domain";
 
 // Queue context types
 export interface QueueContextType {
@@ -44,4 +42,12 @@ export interface QueueSidebarContextType {
   open: () => void;
   close: () => void;
   toggle: () => void;
+}
+
+export interface WebSocketSessionContextType {
+  isConnected: boolean;
+  currentMusicId: number | null;
+  listeners: Array<Listener>;
+
+  disconnect: () => void;
 }

@@ -1,4 +1,4 @@
-import { SessionState, PlayerEvent, WebSocketMessage } from "./types";
+import { SessionState, PlayerEvent, WebSocketMessage } from "@/types/domain";
 
 export class SessionManager {
   private state: SessionState;

@@ -1,24 +1,19 @@
 "use client";
 
-import React from 'react';
-import { QueueList } from './QueueList';
-import { X } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-
-interface QueueSidebarProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
+import React from "react";
+import { QueueList } from "./QueueList";
+import { X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export function QueueSidebar({ isOpen, onClose }: QueueSidebarProps) {
   return (
     <AnimatePresence>
       {isOpen && (
         <motion.aside
-          initial={{ x: '100%' }}
+          initial={{ x: "100%" }}
           animate={{ x: 0 }}
-          exit={{ x: '100%' }}
-          transition={{ type: 'tween', duration: 0.25 }}
+          exit={{ x: "100%" }}
+          transition={{ type: "tween", duration: 0.25 }}
           className="h-full w-80 bg-background border-l border-border shadow-lg flex flex-col z-40"
         >
           <div className="flex items-center justify-between p-4 border-b border-border">
@@ -38,4 +33,4 @@ export function QueueSidebar({ isOpen, onClose }: QueueSidebarProps) {
       )}
     </AnimatePresence>
   );
-} 
+}

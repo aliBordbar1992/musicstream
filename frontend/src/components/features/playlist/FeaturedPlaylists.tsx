@@ -9,10 +9,6 @@ interface Playlist {
   image: string;
 }
 
-interface FeaturedPlaylistsProps {
-  playlists: Playlist[];
-}
-
 export default function FeaturedPlaylists({
   playlists,
 }: FeaturedPlaylistsProps) {

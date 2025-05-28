@@ -65,3 +65,128 @@ export interface Playlist {
   songs?: Music[]; // Optional since it's omitted in some cases
   is_owner: boolean;
 }
+
+export type ListenerState =
+  | "paused"
+  | "playing"
+  | "fast_forward"
+  | "rewind"
+  | "seeking";
+
+export interface Listener {
+  username: string;
+  position: number;
+  state: ListenerState;
+}
+
+export type WebSocketMessageType =
+  | "join_session"
+  | "leave_session"
+  | "play"
+  | "pause"
+  | "resume"
+  | "progress"
+  | "seek"
+  | "get_listeners"
+  | "user_joined"
+  | "user_left"
+  | "current_listeners";
+
+export type WebSocketPayload = {
+  join_session: { music_id: number; position: number };
+  leave_session: Record<string, never>;
+  play: { music_id: number; timestamp: number };
+  get_listeners: Record<string, never>;
+  user_joined: { u: string; p?: number };
+  user_left: { u: string };
+  progress: { u: string; p: number };
+  seek: { u: string; p: number };
+  pause: { u: string };
+  resume: { u: string };
+  current_listeners: { l: Listener[] };
+};
+
+export interface WebSocketMessage {
+  t: WebSocketMessageType;
+  p: WebSocketPayload[WebSocketMessageType];
+}
+
+// Raw message type that WebSocket actually sends/receives
+export type RawMessage = string | ArrayBuffer | Blob;
+
+export const INACTIVITY_TIMEOUT = 30000; // 30 seconds
+export const INACTIVITY_CHECK_INTERVAL = 5000; // 5 seconds
+
+export type PlayerEventType =
+  | "play"
+  | "pause"
+  | "resume"
+  | "progress"
+  | "close"
+  | "seek";
+
+export interface PlayerEvent {
+  type: PlayerEventType;
+  musicId?: number;
+  progress?: number;
+  timestamp: number;
+}
+
+export interface SessionState {
+  sessionId: string | null;
+  musicId: number | null;
+  isActive: boolean;
+  username: string | null;
+  position: number | null;
+  isClosed: boolean;
+}
+
+export interface WebSocketState {
+  isConnected: boolean;
+  isConnecting: boolean;
+  lastActivity: number;
+}
+
+export interface QueuedEvent {
+  event: PlayerEvent;
+  timestamp: number;
+}
+
+export class EventQueue {
+  private queue: QueuedEvent[] = [];
+  private readonly maxQueueSize: number;
+
+  constructor(maxQueueSize: number = 100) {
+    this.maxQueueSize = maxQueueSize;
+  }
+
+  enqueue(event: PlayerEvent): void {
+    if (this.queue.length >= this.maxQueueSize) {
+      this.queue.shift(); // Remove oldest event if queue is full
+    }
+    this.queue.push({
+      event,
+      timestamp: Date.now(),
+    });
+  }
+
+  dequeue(): QueuedEvent | undefined {
+    return this.queue.shift();
+  }
+
+  peek(): QueuedEvent | undefined {
+    return this.queue[0];
+  }
+
+  isEmpty(): boolean {
+    return this.queue.length === 0;
+  }
+
+  clear(): void {
+    this.queue = [];
+  }
+
+  get length(): number {
+    return this.queue.length;
+  }
+}

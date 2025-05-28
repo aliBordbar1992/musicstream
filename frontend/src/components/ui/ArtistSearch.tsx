@@ -1,21 +1,19 @@
-import { useState, useEffect, useRef } from 'react';
-import { music } from '@/lib/api';
-import Input from './Input';
+import { useState, useEffect, useRef } from "react";
+import { music } from "@/lib/api";
+import Input from "./Input";
 
 interface Artist {
   id: number;
   name: string;
 }
 
-interface ArtistSearchProps {
-  value: string;
-  onChange: (value: string) => void;
-  onArtistSelect?: (artist: Artist) => void;
-  error?: string;
-  required?: boolean;
-}
-
-export default function ArtistSearch({ value, onChange, onArtistSelect, error, required }: ArtistSearchProps) {
+export default function ArtistSearch({
+  value,
+  onChange,
+  onArtistSelect,
+  error,
+  required,
+}: ArtistSearchProps) {
   const [artists, setArtists] = useState<Artist[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -29,7 +27,7 @@ export default function ArtistSearch({ value, onChange, onArtistSelect, error, r
         const results = await music.searchArtists(value);
         setArtists(results);
       } catch (error) {
-        console.error('Failed to load artists:', error);
+        console.error("Failed to load artists:", error);
       } finally {
         setLoading(false);
       }
@@ -41,13 +39,16 @@ export default function ArtistSearch({ value, onChange, onArtistSelect, error, r
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -77,7 +78,9 @@ export default function ArtistSearch({ value, onChange, onArtistSelect, error, r
       {isOpen && value && (
         <div className="absolute z-10 w-full mt-1 bg-white dark:bg-neutral-800 shadow-lg rounded-md border border-gray-200 dark:border-neutral-700 max-h-60 overflow-auto">
           {loading ? (
-            <div className="p-2 text-center text-gray-500 dark:text-gray-400">Loading...</div>
+            <div className="p-2 text-center text-gray-500 dark:text-gray-400">
+              Loading...
+            </div>
           ) : artists.length > 0 ? (
             <ul>
               {artists.map((artist) => (
@@ -91,10 +94,12 @@ export default function ArtistSearch({ value, onChange, onArtistSelect, error, r
               ))}
             </ul>
           ) : (
-            <div className="p-2 text-center text-gray-500 dark:text-gray-400">No artists found</div>
+            <div className="p-2 text-center text-gray-500 dark:text-gray-400">
+              No artists found
+            </div>
           )}
         </div>
       )}
     </div>
   );
-} 
+}

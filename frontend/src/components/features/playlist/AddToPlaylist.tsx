@@ -6,17 +6,6 @@ import toast from "react-hot-toast";
 import axios from "axios";
 import Button from "@/components/ui/Button";
 
-interface Playlist {
-  id: number;
-  name: string;
-  is_owner: boolean;
-}
-
-interface AddToPlaylistProps {
-  songId: number;
-  onSuccess?: () => void;
-}
-
 export default function AddToPlaylist({
   songId,
   onSuccess,
