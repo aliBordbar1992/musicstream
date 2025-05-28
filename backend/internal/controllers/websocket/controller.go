@@ -186,6 +186,6 @@ func (c *WebSocketController) UpdatePosition(username string, musicID uint, posi
 	return c.listenerService.UpdatePosition(username, musicID, position)
 }
 
-func (c *WebSocketController) BroadcastToMusic(musicID uint, message []byte) {
-	c.broadcaster.BroadcastToMusic(musicID, message)
+func (c *WebSocketController) BroadcastToMusic(musicID uint, message []byte, sender string) {
+	c.broadcaster.BroadcastToMusic(musicID, message, sender)
 }

@@ -13,7 +13,7 @@ type SessionManager interface {
 	LeaveSession(username string, musicID uint) error
 	GetCurrentListeners(musicID uint) ([]*domain.Listener, error)
 	UpdatePosition(username string, musicID uint, position float64) error
-	BroadcastToMusic(musicID uint, message []byte)
+	BroadcastToMusic(musicID uint, message []byte, senderUsername string)
 }
 
 // MessageHandler defines the interface for handling WebSocket messages
@@ -118,7 +118,7 @@ func (h *DefaultMessageHandler) handleJoinSession(client *Client, payload json.R
 		return
 	}
 
-	h.sessionManager.BroadcastToMusic(*client.musicID, eventData)
+	h.sessionManager.BroadcastToMusic(*client.musicID, eventData, client.username)
 }
 
 func (h *DefaultMessageHandler) handleLeaveSession(client *Client) {
@@ -154,7 +154,7 @@ func (h *DefaultMessageHandler) handleLeaveSession(client *Client) {
 		return
 	}
 
-	h.sessionManager.BroadcastToMusic(musicID, eventData)
+	h.sessionManager.BroadcastToMusic(musicID, eventData, client.username)
 }
 
 func (h *DefaultMessageHandler) handleGetListeners(client *Client) {
@@ -229,7 +229,7 @@ func (h *DefaultMessageHandler) handleProgress(client *Client, payload json.RawM
 		return
 	}
 
-	h.sessionManager.BroadcastToMusic(*client.musicID, eventData)
+	h.sessionManager.BroadcastToMusic(*client.musicID, eventData, client.username)
 }
 
 func (h *DefaultMessageHandler) handleSeek(client *Client, payload json.RawMessage) {
@@ -269,7 +269,7 @@ func (h *DefaultMessageHandler) handleSeek(client *Client, payload json.RawMessa
 		return
 	}
 
-	h.sessionManager.BroadcastToMusic(*client.musicID, eventData)
+	h.sessionManager.BroadcastToMusic(*client.musicID, eventData, client.username)
 }
 
 func (h *DefaultMessageHandler) handlePause(client *Client) {
@@ -293,7 +293,7 @@ func (h *DefaultMessageHandler) handlePause(client *Client) {
 		return
 	}
 
-	h.sessionManager.BroadcastToMusic(*client.musicID, eventData)
+	h.sessionManager.BroadcastToMusic(*client.musicID, eventData, client.username)
 }
 
 func (h *DefaultMessageHandler) handleResume(client *Client) {
@@ -317,5 +317,5 @@ func (h *DefaultMessageHandler) handleResume(client *Client) {
 		return
 	}
 
-	h.sessionManager.BroadcastToMusic(*client.musicID, eventData)
+	h.sessionManager.BroadcastToMusic(*client.musicID, eventData, client.username)
 }

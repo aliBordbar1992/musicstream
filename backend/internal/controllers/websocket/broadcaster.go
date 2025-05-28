@@ -33,13 +33,13 @@ func (b *Broadcaster) Unregister(username string) {
 	b.mu.Unlock()
 }
 
-// BroadcastToMusic sends a message to all clients listening to a specific music
-func (b *Broadcaster) BroadcastToMusic(musicID uint, message []byte) {
+// BroadcastToMusic sends a message to all clients listening to a specific music except the sender
+func (b *Broadcaster) BroadcastToMusic(musicID uint, message []byte, sender string) {
 	b.mu.RLock()
 	defer b.mu.RUnlock()
 
-	for _, client := range b.clients {
-		if client.musicID != nil && *client.musicID == musicID {
+	for username, client := range b.clients {
+		if client.musicID != nil && *client.musicID == musicID && username != sender {
 			client.Send(message)
 		}
 	}
@@ -67,7 +67,7 @@ func (b *Broadcaster) BroadcastUserJoined(username string, musicID uint) {
 		return
 	}
 
-	b.BroadcastToMusic(musicID, data)
+	b.BroadcastToMusic(musicID, data, username)
 }
 
 // BroadcastUserLeft notifies all clients when a user leaves
@@ -92,5 +92,5 @@ func (b *Broadcaster) BroadcastUserLeft(username string, musicID uint) {
 		return
 	}
 
-	b.BroadcastToMusic(musicID, data)
+	b.BroadcastToMusic(musicID, data, username)
 }
