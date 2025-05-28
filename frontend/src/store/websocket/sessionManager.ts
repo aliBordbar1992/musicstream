@@ -45,8 +45,8 @@ export class SessionManager {
       return null;
     }
 
-    if (this.state.musicId === null) {
-      console.log("joining session ----- this state is null");
+    // If this is a play event and we're not in a session, join
+    if (event.type === "play" && this.state.musicId === null) {
       this.joinSession("default", event.musicId);
       return [
         {
@@ -63,15 +63,15 @@ export class SessionManager {
       ];
     }
 
-    if (this.state.musicId !== event.musicId) {
-      console.log(
-        "leaving session ----- music id changed",
-        this.state.musicId,
-        event.musicId
-      );
+    // If music ID changed, leave current session and join new one
+    if (this.state.musicId !== event.musicId && event.type === "play") {
       this.leaveSession();
       this.joinSession("default", event.musicId);
       return [
+        {
+          t: "leave_session",
+          p: {},
+        },
         {
           t: "join_session",
           p: {
@@ -84,6 +84,11 @@ export class SessionManager {
           p: {},
         },
       ];
+    }
+
+    // For other events, only process if we're in the correct session
+    if (this.state.musicId !== event.musicId) {
+      return null;
     }
 
     if (event.type === "close") {

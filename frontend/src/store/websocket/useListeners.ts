@@ -5,10 +5,7 @@ export function useListeners() {
   const [listeners, setListeners] = useState<Listener[]>([]);
 
   const addListener = (username: string, position: number) => {
-    console.log("adding listener:", username, position);
-    // check if listener already exists
     if (listeners.find((l) => l.username === username)) {
-      console.log("listener already exists:", username);
       return;
     }
 
@@ -34,11 +31,16 @@ export function useListeners() {
     }
   };
 
+  const clearListeners = () => {
+    setListeners([]);
+  };
+
   return {
     listeners,
     addListener,
     removeListener,
     updateListenerProgress,
     updateListenerState,
+    clearListeners,
   };
 }

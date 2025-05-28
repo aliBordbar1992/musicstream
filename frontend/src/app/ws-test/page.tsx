@@ -1,32 +1,21 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { MusicList } from "@/components/features/music/MusicList";
 import { music } from "@/lib/api";
-import { Music } from "@/types/domain";
 import { LayoutContent } from "@/components/layouts/LayoutContent";
 import { useWebSocketSession } from "@/store/WebSocketSessionContext";
 import Button from "@/components/ui/Button";
+import { useQuery } from "@tanstack/react-query";
 
 export default function WebSocketTestPage() {
-  const [musicList, setMusicList] = useState<Music[]>([]);
-  const [loading, setLoading] = useState(true);
   const { isConnected, currentMusicId, listeners, disconnect } =
     useWebSocketSession();
 
-  useEffect(() => {
-    const fetchMusic = async () => {
-      try {
-        const data = await music.getAll();
-        setMusicList(data);
-      } catch (error) {
-        console.error("Failed to fetch music:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchMusic();
-  }, []);
+  const { data: musicList, isLoading } = useQuery({
+    queryKey: ["music"],
+    queryFn: () => music.getAll(),
+  });
 
   return (
     <LayoutContent>
@@ -35,7 +24,7 @@ export default function WebSocketTestPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div>
             <h2 className="text-lg font-semibold mb-4">Music List</h2>
-            <MusicList music={musicList} loading={loading} />
+            <MusicList music={musicList || []} loading={isLoading} />
           </div>
           <div>
             <h2 className="text-lg font-semibold mb-4">Session Panel</h2>

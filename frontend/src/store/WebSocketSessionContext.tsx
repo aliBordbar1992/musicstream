@@ -12,6 +12,7 @@ import { useListeners } from "./websocket/useListeners";
 import { useWebSocket } from "./websocket/useWebSocket";
 import { API_URL } from "@/lib/api";
 import Cookies from "js-cookie";
+import { useAuth } from "@/store/AuthContext";
 
 const WebSocketSessionContext =
   createContext<WebSocketSessionContextType | null>(null);
@@ -81,6 +82,7 @@ export function WebSocketSessionProvider({
 }) {
   const token = Cookies.get("token");
   const wsUrl = token ? `${API_URL}/ws/listen?token=${token}` : null;
+  const { user } = useAuth();
 
   const {
     sendEvent,
@@ -95,6 +97,7 @@ export function WebSocketSessionProvider({
     removeListener,
     updateListenerProgress,
     updateListenerState,
+    clearListeners,
   } = useListeners();
 
   // Handle WebSocket messages
@@ -126,6 +129,13 @@ export function WebSocketSessionProvider({
             data.p.l.forEach((listener) => {
               addListener(listener.username, listener.position);
             });
+
+            // remove other listeners not in the list
+            listeners.forEach((listener) => {
+              if (!data.p.l.some((l) => l.username === listener.username)) {
+                removeListener(listener.username);
+              }
+            });
           }
         }
       } catch (error) {
@@ -138,6 +148,12 @@ export function WebSocketSessionProvider({
 
     // Set up event bus listeners for player events
     const playHandler = (event: PlayerEvent) => {
+      // Update local state
+      if (event.musicId) {
+        addListener(user?.username || "", event.progress || 0);
+        updateListenerState(user?.username || "", "playing");
+      }
+      // Send to server
       sendEvent({
         type: "play",
         musicId: event.musicId,
@@ -146,6 +162,11 @@ export function WebSocketSessionProvider({
     };
 
     const pauseHandler = (event: PlayerEvent) => {
+      // Update local state
+      if (event.musicId) {
+        updateListenerState(user?.username || "", "paused");
+      }
+      // Send to server
       sendEvent({
         type: "pause",
         musicId: event.musicId,
@@ -154,6 +175,11 @@ export function WebSocketSessionProvider({
     };
 
     const resumeHandler = (event: PlayerEvent) => {
+      // Update local state
+      if (event.musicId) {
+        updateListenerState(user?.username || "", "playing");
+      }
+      // Send to server
       sendEvent({
         type: "resume",
         musicId: event.musicId,
@@ -162,6 +188,11 @@ export function WebSocketSessionProvider({
     };
 
     const progressHandler = (event: PlayerEvent) => {
+      // Update local state
+      if (event.musicId && event.progress !== undefined) {
+        updateListenerProgress(user?.username || "", event.progress);
+      }
+      // Send to server
       sendEvent({
         type: "progress",
         musicId: event.musicId,
@@ -171,6 +202,11 @@ export function WebSocketSessionProvider({
     };
 
     const closeHandler = (event: PlayerEvent) => {
+      // Update local state
+      if (event.musicId) {
+        clearListeners();
+      }
+      // Send to server
       sendEvent({
         type: "close",
         musicId: event.musicId,

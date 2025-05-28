@@ -51,7 +51,6 @@ export class WebSocketManager {
   }
 
   private async connect(): Promise<void> {
-    console.log("Connecting to", this.wsUrl);
     if (this.socketState.isConnected || this.socketState.isConnecting) return;
 
     this.updateState({ isConnecting: true });
@@ -111,7 +110,6 @@ export class WebSocketManager {
       this.reconnectTimeout = null;
     }
 
-    console.log("stopping queue processing due to disconnect.");
     this.stopQueueProcessing();
     this.updateState({ isConnected: false, isConnecting: false });
   }
@@ -133,13 +131,6 @@ export class WebSocketManager {
         return;
       }
 
-      console.log(
-        "items in queue:",
-        this.eventQueue.length,
-        "next item:",
-        this.eventQueue.peek()
-      );
-
       const e = this.eventQueue.dequeue();
       if (!e) return;
 
@@ -151,7 +142,6 @@ export class WebSocketManager {
         for (const message of messages) {
           while (retries < this.maxRetries) {
             try {
-              console.log("sending message:", message);
               this.ws?.send(JSON.stringify(message));
 
               // if event type is close, empty the queue and do not process queue any further
