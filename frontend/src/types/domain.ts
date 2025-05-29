@@ -51,9 +51,11 @@ export interface PlayerTrack {
 
 // User domain types
 export interface User {
-  created_at: string;
-  updated_at: string;
   username: string;
+  name?: string | null;
+  profile_picture?: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Playlist domain types

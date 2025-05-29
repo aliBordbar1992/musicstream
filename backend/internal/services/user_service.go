@@ -57,9 +57,19 @@ func (s *userService) GetUser(username string) (*domain.User, error) {
 	return s.userRepo.FindByUsername(username)
 }
 
-// Helper function to generate token
-func generateToken() string {
-	// implement proper token generation
+func (s *userService) UpdateProfile(username string, name string, profilePicture string) error {
+	user, err := s.userRepo.FindByUsername(username)
+	if err != nil {
+		return errors.New("user not found")
+	}
 
-	return "dummy-token"
+	user.Name = &name
+	if profilePicture != "" {
+		user.ProfilePicture = &profilePicture
+	} else {
+		user.ProfilePicture = nil
+	}
+	user.UpdatedAt = time.Now()
+
+	return s.userRepo.Update(user)
 }

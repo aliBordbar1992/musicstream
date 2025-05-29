@@ -1,37 +1,47 @@
 "use client";
 
-import { useAuth } from "@/store/AuthContext";
-import { UserCircleIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
+import UserImage from "@/components/ui/UserImage";
+import { useAuth } from "@/store/AuthContext";
 
 export function UserStatus() {
-  const { user, logout } = useAuth();
+  const { user, logout, isAuthenticated } = useAuth();
 
-  if (!user) {
+  if (!isAuthenticated) {
     return (
-      <Link
-        href="/login"
-        className="flex items-center space-x-2 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white"
-      >
-        <UserCircleIcon className="h-6 w-6" />
-        <span>Login</span>
-      </Link>
+      <div className="flex items-center space-x-4">
+        <Link
+          href="/login"
+          className="text-neutral-600 dark:text-neutral-300 hover:text-primary-600 dark:hover:text-primary-400"
+        >
+          Login
+        </Link>
+        <Link
+          href="/register"
+          className="text-neutral-600 dark:text-neutral-300 hover:text-primary-600 dark:hover:text-primary-400"
+        >
+          Register
+        </Link>
+      </div>
     );
   }
 
+  const displayName = user?.name || user?.username || "Guest";
+
   return (
     <div className="flex items-center space-x-4">
-      <div className="flex items-center space-x-2">
-        <UserCircleIcon className="h-6 w-6 text-neutral-600 dark:text-neutral-300" />
-        <span className="text-neutral-900 dark:text-white">
-          {user.username}
-        </span>
-      </div>
+      <Link
+        href="/profile"
+        className="flex items-center space-x-3 text-neutral-600 dark:text-neutral-300 hover:text-primary-600 dark:hover:text-primary-400"
+      >
+        <UserImage src={user?.profile_picture} alt={displayName} size="lg" />
+        <span className="font-medium">{displayName}</span>
+      </Link>
       <button
         onClick={logout}
-        className="text-sm text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white"
+        className="text-neutral-600 dark:text-neutral-300 hover:text-primary-600 dark:hover:text-primary-400"
       >
-        Sign out
+        Logout
       </button>
     </div>
   );

@@ -30,3 +30,7 @@ func (r *userRepository) FindByUsername(username string) (*domain.User, error) {
 func (r *userRepository) Delete(username string) error {
 	return r.db.Where("username = ?", username).Delete(&domain.User{}).Error
 }
+
+func (r *userRepository) Update(user *domain.User) error {
+	return r.db.Save(user).Error
+}

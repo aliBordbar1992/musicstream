@@ -68,3 +68,25 @@ func (c *UserController) GetUser(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, user)
 }
+
+// UpdateProfile handles updating user profile information
+func (c *UserController) UpdateProfile(ctx *gin.Context) {
+	username := ctx.GetString("username")
+
+	var req struct {
+		Name           string `json:"name" binding:"required"`
+		ProfilePicture string `json:"profile_picture"`
+	}
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+		return
+	}
+
+	if err := c.userService.UpdateProfile(username, req.Name, req.ProfilePicture); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "Profile updated successfully"})
+}

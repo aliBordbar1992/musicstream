@@ -44,6 +44,13 @@ export const auth = {
     const response = await api.get("/me");
     return response.data;
   },
+  updateProfile: async (name: string, profilePicture: string | null) => {
+    const response = await api.put("/me/profile", {
+      name,
+      profile_picture: profilePicture,
+    });
+    return response.data;
+  },
 };
 
 export const music = {

@@ -11,6 +11,8 @@ import { MusicalNoteIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { Playlist } from "@/types/domain";
 import Button from "@/components/ui/Button";
 import { Loading } from "@/components/ui/Loading";
+import { EmptyStateProps } from "@/types/components";
+import { Input } from "@headlessui/react";
 
 const EmptyState = ({ searchQuery, onCreateClick }: EmptyStateProps) => (
   <div className="flex flex-col items-center justify-center py-12 px-4">
@@ -78,7 +80,7 @@ export default function PlaylistsPage() {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Playlists</h1>
           <div className="flex gap-4">
-            <input
+            <Input
               type="text"
               placeholder="Search playlists..."
               value={searchQuery}
