@@ -34,7 +34,7 @@ export function UserStatus() {
         href="/profile"
         className="flex items-center space-x-3 text-neutral-600 dark:text-neutral-300 hover:text-primary-600 dark:hover:text-primary-400"
       >
-        <UserImage src={user?.profile_picture} alt={displayName} size="lg" />
+        <UserImage src={user?.profile_picture} alt={displayName} size="md" />
         <span className="font-medium">{displayName}</span>
       </Link>
       <button

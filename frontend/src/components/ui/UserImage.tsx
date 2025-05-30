@@ -2,8 +2,9 @@
 
 import Image from "next/image";
 import { UserCircleIcon } from "@heroicons/react/24/outline";
-import { useState } from "react";
+import { useState, memo, useMemo } from "react";
 import { API_URL } from "@/lib/api";
+
 interface UserImageProps {
   src?: string | null;
   alt: string;
@@ -17,7 +18,7 @@ const sizeClasses = {
   lg: "w-16 h-16",
 };
 
-export default function UserImage({
+const UserImage = memo(function UserImage({
   src,
   alt,
   size = "sm",
@@ -25,6 +26,12 @@ export default function UserImage({
 }: UserImageProps) {
   const [imageError, setImageError] = useState(false);
   const sizeClass = sizeClasses[size];
+
+  const imageUrl = useMemo(() => {
+    if (!src || imageError) return null;
+    const isBase64 = src.startsWith("data:image");
+    return isBase64 ? src : API_URL + "/" + src.replaceAll("\\", "/");
+  }, [src, imageError]);
 
   if (!src || imageError) {
     return (
@@ -34,18 +41,22 @@ export default function UserImage({
     );
   }
 
-  const isBase64 = src.startsWith("data:image");
-
   return (
     <div className={`relative ${sizeClass} ${className}`}>
       <Image
-        src={API_URL + "/" + src.replaceAll("\\", "/")}
+        src={imageUrl!}
         alt={alt}
         fill
+        sizes={`(max-width: 768px) ${
+          size === "sm" ? "32px" : size === "md" ? "48px" : "64px"
+        }, ${size === "sm" ? "32px" : size === "md" ? "48px" : "64px"}`}
         className="object-cover rounded-full"
         onError={() => setImageError(true)}
-        unoptimized={isBase64}
+        unoptimized={src.startsWith("data:image")}
+        priority
       />
     </div>
   );
-}
+});
+
+export default UserImage;

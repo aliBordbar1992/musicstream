@@ -7,6 +7,7 @@ import { LayoutContent } from "@/components/layouts/LayoutContent";
 import { useWebSocketSession } from "@/store/WebSocketSessionContext";
 import Button from "@/components/ui/Button";
 import { useQuery } from "@tanstack/react-query";
+import UserImage from "@/components/ui/UserImage";
 
 export default function WebSocketTestPage() {
   const { isConnected, currentMusicId, listeners, disconnect } =
@@ -45,14 +46,23 @@ export default function WebSocketTestPage() {
                         key={listener.username}
                         className="text-sm p-2 rounded bg-neutral-100 dark:bg-neutral-700"
                       >
-                        <div className="font-medium">
-                          {listener.name || listener.username}
-                        </div>
-                        <div className="text-xs text-neutral-500">
-                          Position: {listener.position.toFixed(0)}s
-                        </div>
-                        <div className="text-xs text-neutral-500">
-                          State: {listener.state}
+                        <div className="flex items-center space-x-3">
+                          <UserImage
+                            src={listener.profile_picture}
+                            alt={listener.name || listener.username}
+                            size="sm"
+                          />
+                          <div className="flex-1">
+                            <div className="font-medium">
+                              {listener.name || listener.username}
+                            </div>
+                            <div className="text-xs text-neutral-500">
+                              Position: {listener.position.toFixed(0)}s
+                            </div>
+                            <div className="text-xs text-neutral-500">
+                              State: {listener.state}
+                            </div>
+                          </div>
                         </div>
                       </div>
                     ))}
