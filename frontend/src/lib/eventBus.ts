@@ -1,5 +1,5 @@
 import mitt from "mitt";
-import { PlayerEvent } from "@/store/websocket/types";
+import { PlayerEvent } from "@/types/domain";
 
 // Define all possible event types
 export type EventTypes = {
@@ -26,6 +26,16 @@ export type EventTypes = {
   "session:error": { message: string };
   "session:connected": void;
   "session:disconnected": void;
+
+  // Chat Events
+  "chat:msg_sent": { message: string };
+  "chat:msg_received": {
+    message: string;
+    username: string;
+    name: string | null;
+    profilePicture: string | null;
+    timestamp: number;
+  };
 };
 
 // Create and export the event bus

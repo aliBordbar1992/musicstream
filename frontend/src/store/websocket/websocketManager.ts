@@ -203,4 +203,21 @@ export class WebSocketManager {
     }
     await this.processEventQueue();
   }
+
+  async sendChatMessage(message: string): Promise<void> {
+    if (
+      !this.socketState.isConnected ||
+      !this.sessionManager.getState().musicId
+    ) {
+      return;
+    }
+
+    const event: PlayerEvent = {
+      type: "chat_message",
+      message,
+      timestamp: Date.now(),
+    };
+
+    await this.sendEvent(event);
+  }
 }

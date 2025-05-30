@@ -75,6 +75,15 @@ function isCurrentListenersMessage(
   return message.t === "current_listeners";
 }
 
+function isChatMessage(
+  message: WebSocketMessage
+): message is WebSocketMessage & {
+  t: "chat_message";
+  p: WebSocketPayload["chat_message"];
+} {
+  return message.t === "chat_message";
+}
+
 export function WebSocketSessionProvider({
   children,
 }: {
@@ -90,6 +99,7 @@ export function WebSocketSessionProvider({
     getSocketState,
     getSessionState,
     setMessageHandler,
+    sendChatMessage,
   } = useWebSocket(wsUrl || "");
   const {
     listeners,
@@ -145,6 +155,14 @@ export function WebSocketSessionProvider({
               if (!data.p.l.some((l) => l.u === listener.username)) {
                 removeListener(listener.username);
               }
+            });
+          } else if (isChatMessage(data)) {
+            eventBus.emit("chat:msg_received", {
+              message: data.p.m,
+              username: data.p.u,
+              name: data.p.n,
+              profilePicture: data.p.pp,
+              timestamp: data.p.ts,
             });
           }
         }
@@ -229,11 +247,16 @@ export function WebSocketSessionProvider({
       });
     };
 
+    const chatMessageHandler = (data: { message: string }) => {
+      sendChatMessage(data.message);
+    };
+
     eventBus.on("player:play", playHandler);
     eventBus.on("player:pause", pauseHandler);
     eventBus.on("player:resume", resumeHandler);
     eventBus.on("player:progress", progressHandler);
     eventBus.on("player:close", closeHandler);
+    eventBus.on("chat:msg_sent", chatMessageHandler);
 
     // Set up WebSocket message handler using the manager from useWebSocket
     setMessageHandler(handleMessage);
@@ -244,6 +267,7 @@ export function WebSocketSessionProvider({
       eventBus.off("player:resume", resumeHandler);
       eventBus.off("player:progress", progressHandler);
       eventBus.off("player:close", closeHandler);
+      eventBus.off("chat:msg_sent", chatMessageHandler);
     };
   }, [
     wsUrl,
@@ -253,6 +277,7 @@ export function WebSocketSessionProvider({
     updateListenerProgress,
     setMessageHandler,
     updateListenerState,
+    sendChatMessage,
   ]);
 
   const socketState = getSocketState();

@@ -94,7 +94,8 @@ export type WebSocketMessageType =
   | "get_listeners"
   | "user_joined"
   | "user_left"
-  | "current_listeners";
+  | "current_listeners"
+  | "chat_message";
 
 export type WebSocketPayload = {
   join_session: { music_id: number; position: number };
@@ -114,6 +115,13 @@ export type WebSocketPayload = {
       pp: string | null;
       p?: number;
     }>;
+  };
+  chat_message: {
+    u: string;
+    n: string | null;
+    pp: string | null;
+    m: string;
+    ts: number;
   };
 };
 
@@ -200,4 +208,18 @@ export class EventQueue {
   get length(): number {
     return this.queue.length;
   }
+}
+
+export interface ChatMessage {
+  username: string;
+  name: string | null;
+  profilePicture: string | null;
+  message: string;
+  timestamp: number;
+}
+
+export interface ChatEvent {
+  type: "chat_message";
+  message: string;
+  timestamp: number;
 }

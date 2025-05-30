@@ -26,6 +26,12 @@ export function useWebSocket(wsUrl: string) {
     }
   }, []);
 
+  const sendChatMessage = useCallback(async (message: string) => {
+    if (managerRef.current) {
+      await managerRef.current.sendChatMessage(message);
+    }
+  }, []);
+
   const disconnect = useCallback(() => {
     managerRef.current?.disconnect();
   }, []);
@@ -63,5 +69,6 @@ export function useWebSocket(wsUrl: string) {
     getSocketState,
     getSessionState,
     setMessageHandler,
+    sendChatMessage,
   };
 }
