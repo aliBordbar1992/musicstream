@@ -1,21 +1,25 @@
 package services
 
 import (
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/aliBordbar1992/musicstream-backend/internal/domain"
 	"github.com/aliBordbar1992/musicstream-backend/internal/repositories"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type UploadService interface {
 	HandleMusicUpload(ctx *gin.Context, fileService FileService, musicService domain.MusicService) (*domain.Music, error)
 	HandleMusicDownload(ctx *gin.Context, fileService FileService, musicService domain.MusicService) (*domain.Music, error)
+	HandleProfilePictureUpload(base64file string, fileService FileService) (string, error)
 }
 
 type uploadService struct {
@@ -50,13 +54,13 @@ func (s *uploadService) HandleMusicUpload(ctx *gin.Context, fileService FileServ
 	}
 
 	// Create upload directory if it doesn't exist
-	if err := fileService.EnsureDirectoryExists(s.uploadDir); err != nil {
+	if err := fileService.EnsureDirectoryExists(getMusicUploadDir(s)); err != nil {
 		return nil, err
 	}
 
 	// Generate unique filename
 	filename := fmt.Sprintf("%d_%s", time.Now().UnixNano(), file.Filename)
-	filePath := filepath.Join(s.uploadDir, filename)
+	filePath := filepath.Join(getMusicUploadDir(s), filename)
 
 	// Save the file using Gin's built-in method
 	if err := ctx.SaveUploadedFile(file, filePath); err != nil {
@@ -105,7 +109,7 @@ func (s *uploadService) HandleMusicDownload(ctx *gin.Context, fileService FileSe
 
 	// Generate unique filename
 	filename := fmt.Sprintf("%d_%s.%s", time.Now().UnixNano(), req.Title, filepath.Ext(req.URL))
-	filePath := filepath.Join(s.uploadDir, filename)
+	filePath := filepath.Join(getMusicUploadDir(s), filename)
 
 	// Download the file
 	_, err := fileService.DownloadFile(req.URL, filePath, linkValidator)
@@ -143,4 +147,44 @@ func (s *uploadService) HandleMusicDownload(ctx *gin.Context, fileService FileSe
 	}
 
 	return music, nil
+}
+
+func (s *uploadService) HandleProfilePictureUpload(base64file string, fileService FileService) (string, error) {
+	// decode base64 file
+	// if base64file starts with data:etc, then remove the data:etc,
+	if strings.HasPrefix(base64file, "data:") {
+		base64file = strings.Split(base64file, ",")[1]
+	}
+	decodedFile, err := base64.StdEncoding.DecodeString(base64file)
+	if err != nil {
+		return "", fmt.Errorf("failed to decode base64 file: %w", err)
+	}
+
+	// save file to storage
+	ext, err := fileService.GetImageExtensionFromBase64(base64file)
+	if err != nil {
+		return "", fmt.Errorf("failed to get image extension: %w", err)
+	}
+
+	filename := fmt.Sprintf("%d_%s", time.Now().UnixNano(), uuid.New().String())
+
+	// Create upload directory if it doesn't exist
+	if err := fileService.EnsureDirectoryExists(getProfilePictureUploadDir(s)); err != nil {
+		return "", fmt.Errorf("failed to create upload directory: %w", err)
+	}
+
+	filePath := filepath.Join(getProfilePictureUploadDir(s), filename+ext)
+	if err := fileService.SaveFile(filePath, decodedFile); err != nil {
+		return "", fmt.Errorf("failed to save file: %w", err)
+	}
+
+	return filePath, nil
+}
+
+func getMusicUploadDir(s *uploadService) string {
+	return s.uploadDir
+}
+
+func getProfilePictureUploadDir(s *uploadService) string {
+	return fmt.Sprintf("%s/profile_pictures", s.uploadDir)
 }

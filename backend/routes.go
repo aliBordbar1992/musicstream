@@ -23,15 +23,15 @@ func RegisterRoutes(r *gin.Engine) {
 	queueRepo := repositories.NewQueueRepository(DB)
 
 	// Initialize services
-	userService := services.NewUserService(userRepo)
+	uploadService := services.NewUploadService("uploads", DB)
+	userService := services.NewUserService(userRepo, uploadService)
 	fileService := services.NewFileService()
 	musicService := services.NewMusicService(musicRepo, artistRepo, fileService)
 	playlistService := services.NewPlaylistService(playlistRepo, musicRepo)
-	uploadService := services.NewUploadService("uploads", DB)
 	artistService := services.NewArtistService(artistRepo)
 	queueService := services.NewQueueService(queueRepo, musicRepo)
 	cacheService := services.NewRedisCacheService(redisClient)
-	listenerService := services.NewListenerService(cacheService)
+	listenerService := services.NewListenerService(cacheService, userRepo)
 
 	// Initialize link validator
 	linkValidator := domain.NewLinkValidator(&http.Client{})
@@ -42,7 +42,10 @@ func RegisterRoutes(r *gin.Engine) {
 	playlistController := controllers.NewPlaylistController(playlistService)
 	artistController := controllers.NewArtistController(artistService)
 	queueController := controllers.NewQueueController(queueService)
-	websocketController := websocket.NewWebSocketController(listenerService)
+	websocketController := websocket.NewWebSocketController(listenerService, userRepo)
+
+	// Serve static files from uploads directory
+	r.Static("/uploads", "./uploads")
 
 	// Health check
 	r.GET("/health", func(c *gin.Context) {

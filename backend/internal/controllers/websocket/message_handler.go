@@ -23,29 +23,28 @@ type MessageHandler interface {
 
 // DefaultMessageHandler implements the MessageHandler interface
 type DefaultMessageHandler struct {
-	sessionManager SessionManager
+	usersRepository domain.UserRepository
+	sessionManager  SessionManager
 }
 
 // NewDefaultMessageHandler creates a new message handler
-func NewDefaultMessageHandler(sessionManager SessionManager) *DefaultMessageHandler {
+func NewDefaultMessageHandler(sessionManager SessionManager, usersRepository domain.UserRepository) *DefaultMessageHandler {
 	return &DefaultMessageHandler{
-		sessionManager: sessionManager,
+		sessionManager:  sessionManager,
+		usersRepository: usersRepository,
 	}
 }
 
 // HandleMessage processes incoming WebSocket messages
 func (h *DefaultMessageHandler) HandleMessage(client *Client, message []byte) {
-	var event struct {
-		Type    string          `json:"t"`
-		Payload json.RawMessage `json:"p"`
-	}
+	var event BaseEvent
 
 	if err := json.Unmarshal(message, &event); err != nil {
 		log.Printf("Failed to unmarshal event: %v", err)
 		return
 	}
 
-	if event.Type == "join_session" {
+	if event.Type == EventTypeJoinSession {
 		h.handleJoinSession(client, event.Payload)
 		return
 	}
@@ -57,30 +56,34 @@ func (h *DefaultMessageHandler) HandleMessage(client *Client, message []byte) {
 	}
 
 	switch event.Type {
-	case "leave_session":
+	case EventTypeLeaveSession:
 		h.handleLeaveSession(client)
-	case "get_listeners":
+	case EventTypeGetListeners:
 		h.handleGetListeners(client)
-	case "progress":
+	case EventTypeProgress:
 		h.handleProgress(client, event.Payload)
-	case "seek":
+	case EventTypeSeek:
 		h.handleSeek(client, event.Payload)
-	case "pause":
+	case EventTypePause:
 		h.handlePause(client)
-	case "resume":
+	case EventTypeResume:
 		h.handleResume(client)
 	default:
 		log.Printf("Unknown message type: %s", event.Type)
 	}
 }
 
-func (h *DefaultMessageHandler) handleJoinSession(client *Client, payload json.RawMessage) {
+func (h *DefaultMessageHandler) handleJoinSession(client *Client, payload interface{}) {
 	log.Println("handling join session message", client.username, payload)
-	var data struct {
-		MusicID  uint    `json:"music_id"`
-		Position float64 `json:"position"`
+
+	var data JoinSessionPayload
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		log.Printf("Failed to marshal payload: %v", err)
+		return
 	}
-	if err := json.Unmarshal(payload, &data); err != nil {
+
+	if err := json.Unmarshal(payloadBytes, &data); err != nil {
 		log.Printf("Failed to unmarshal join session payload: %v", err)
 		return
 	}
@@ -95,20 +98,19 @@ func (h *DefaultMessageHandler) handleJoinSession(client *Client, payload json.R
 
 	client.musicID = &data.MusicID
 
-	event := struct {
-		Type    string `json:"t"`
-		Payload struct {
-			Username string  `json:"u"`
-			Position float64 `json:"p"`
-		} `json:"p"`
-	}{
-		Type: "user_joined",
-		Payload: struct {
-			Username string  `json:"u"`
-			Position float64 `json:"p"`
-		}{
-			Username: client.username,
-			Position: data.Position,
+	user, err := h.usersRepository.FindByUsername(client.username)
+	if err != nil {
+		log.Printf("Failed to get user: %v", err)
+		return
+	}
+
+	event := BaseEvent{
+		Type: EventTypeUserJoined,
+		Payload: UserJoinSessionEventPayload{
+			Username:       client.username,
+			Name:           user.Name,
+			ProfilePicture: user.ProfilePicture,
+			Position:       data.Position,
 		},
 	}
 
@@ -134,16 +136,9 @@ func (h *DefaultMessageHandler) handleLeaveSession(client *Client) {
 
 	client.musicID = nil
 
-	event := struct {
-		Type    string `json:"t"`
-		Payload struct {
-			Username string `json:"u"`
-		} `json:"p"`
-	}{
-		Type: "user_left",
-		Payload: struct {
-			Username string `json:"u"`
-		}{
+	event := BaseEvent{
+		Type: EventTypeUserLeft,
+		Payload: UserEventPayload{
 			Username: client.username,
 		},
 	}
@@ -169,16 +164,9 @@ func (h *DefaultMessageHandler) handleGetListeners(client *Client) {
 		return
 	}
 
-	response := struct {
-		Type    string `json:"t"`
-		Payload struct {
-			Listeners []*domain.Listener `json:"l"`
-		} `json:"p"`
-	}{
-		Type: "current_listeners",
-		Payload: struct {
-			Listeners []*domain.Listener `json:"l"`
-		}{
+	response := BaseEvent{
+		Type: EventTypeCurrentListeners,
+		Payload: ListenersPayload{
 			Listeners: listeners,
 		},
 	}
@@ -192,11 +180,15 @@ func (h *DefaultMessageHandler) handleGetListeners(client *Client) {
 	client.Send(data)
 }
 
-func (h *DefaultMessageHandler) handleProgress(client *Client, payload json.RawMessage) {
-	var data struct {
-		Position float64 `json:"p"`
+func (h *DefaultMessageHandler) handleProgress(client *Client, payload interface{}) {
+	var data ProgressPayload
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		log.Printf("Failed to marshal payload: %v", err)
+		return
 	}
-	if err := json.Unmarshal(payload, &data); err != nil {
+
+	if err := json.Unmarshal(payloadBytes, &data); err != nil {
 		log.Printf("Failed to unmarshal progress payload: %v", err)
 		return
 	}
@@ -206,18 +198,9 @@ func (h *DefaultMessageHandler) handleProgress(client *Client, payload json.RawM
 		return
 	}
 
-	event := struct {
-		Type    string `json:"t"`
-		Payload struct {
-			Username string  `json:"u"`
-			Position float64 `json:"p"`
-		} `json:"p"`
-	}{
-		Type: "progress",
-		Payload: struct {
-			Username string  `json:"u"`
-			Position float64 `json:"p"`
-		}{
+	event := BaseEvent{
+		Type: EventTypeProgress,
+		Payload: UserPositionEventPayload{
 			Username: client.username,
 			Position: data.Position,
 		},
@@ -232,11 +215,15 @@ func (h *DefaultMessageHandler) handleProgress(client *Client, payload json.RawM
 	h.sessionManager.BroadcastToMusic(*client.musicID, eventData, client.username)
 }
 
-func (h *DefaultMessageHandler) handleSeek(client *Client, payload json.RawMessage) {
-	var data struct {
-		Position float64 `json:"p"`
+func (h *DefaultMessageHandler) handleSeek(client *Client, payload interface{}) {
+	var data ProgressPayload
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		log.Printf("Failed to marshal payload: %v", err)
+		return
 	}
-	if err := json.Unmarshal(payload, &data); err != nil {
+
+	if err := json.Unmarshal(payloadBytes, &data); err != nil {
 		log.Printf("Failed to unmarshal seek payload: %v", err)
 		return
 	}
@@ -246,18 +233,9 @@ func (h *DefaultMessageHandler) handleSeek(client *Client, payload json.RawMessa
 		return
 	}
 
-	event := struct {
-		Type    string `json:"t"`
-		Payload struct {
-			Username string  `json:"u"`
-			Position float64 `json:"p"`
-		} `json:"p"`
-	}{
-		Type: "seek",
-		Payload: struct {
-			Username string  `json:"u"`
-			Position float64 `json:"p"`
-		}{
+	event := BaseEvent{
+		Type: EventTypeSeek,
+		Payload: UserPositionEventPayload{
 			Username: client.username,
 			Position: data.Position,
 		},
@@ -273,16 +251,9 @@ func (h *DefaultMessageHandler) handleSeek(client *Client, payload json.RawMessa
 }
 
 func (h *DefaultMessageHandler) handlePause(client *Client) {
-	event := struct {
-		Type    string `json:"t"`
-		Payload struct {
-			Username string `json:"u"`
-		} `json:"p"`
-	}{
-		Type: "pause",
-		Payload: struct {
-			Username string `json:"u"`
-		}{
+	event := BaseEvent{
+		Type: EventTypePause,
+		Payload: UserEventPayload{
 			Username: client.username,
 		},
 	}
@@ -297,16 +268,9 @@ func (h *DefaultMessageHandler) handlePause(client *Client) {
 }
 
 func (h *DefaultMessageHandler) handleResume(client *Client) {
-	event := struct {
-		Type    string `json:"t"`
-		Payload struct {
-			Username string `json:"u"`
-		} `json:"p"`
-	}{
-		Type: "resume",
-		Payload: struct {
-			Username string `json:"u"`
-		}{
+	event := BaseEvent{
+		Type: EventTypeResume,
+		Payload: UserEventPayload{
 			Username: client.username,
 		},
 	}

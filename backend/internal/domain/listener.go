@@ -6,10 +6,11 @@ import (
 
 // Listener represents a user listening to a music track
 type Listener struct {
-	Username  string    `json:"username"`
-	MusicID   uint      `json:"music_id"`
-	Position  float64   `json:"position"` // Position in seconds
-	UpdatedAt time.Time `json:"updated_at"`
+	Username       string  `json:"u"`
+	Name           *string `json:"n"`  // nullable
+	ProfilePicture *string `json:"pp"` // nullable
+	MusicID        uint    `json:"m"`
+	Position       float64 `json:"p"`
 }
 
 type CacheError string

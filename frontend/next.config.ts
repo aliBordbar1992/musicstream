@@ -14,6 +14,9 @@ export default nextConfig;
 
 module.exports = {
   images: {
-    remotePatterns: [new URL("https://placehold.co/**")],
+    remotePatterns: [
+      new URL("https://placehold.co/**"),
+      new URL("http://localhost:8080/**"),
+    ],
   },
 };

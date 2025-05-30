@@ -1,15 +1,28 @@
 import { useState } from "react";
-import { Listener, ListenerState } from "../store/websocket/types";
+import { Listener, ListenerState } from "@/types/domain";
 
 export function useListeners() {
   const [listeners, setListeners] = useState<Listener[]>([]);
 
-  const addListener = (username: string, position: number) => {
+  const addListener = (
+    username: string,
+    name: string,
+    profilePicture: string | null,
+    position: number
+  ) => {
     if (listeners.find((l) => l.username === username)) {
       return;
     }
 
-    setListeners((prev) => [...prev, { username, position, state: "playing" }]);
+    const listener: Listener = {
+      username,
+      name,
+      profile_picture: profilePicture,
+      position,
+      state: "playing",
+    };
+
+    setListeners((prev) => [...prev, listener]);
   };
 
   const removeListener = (username: string) => {

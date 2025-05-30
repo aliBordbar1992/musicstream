@@ -45,9 +45,11 @@ export default function WebSocketTestPage() {
                         key={listener.username}
                         className="text-sm p-2 rounded bg-neutral-100 dark:bg-neutral-700"
                       >
-                        <div className="font-medium">{listener.username}</div>
+                        <div className="font-medium">
+                          {listener.name || listener.username}
+                        </div>
                         <div className="text-xs text-neutral-500">
-                          Position: {listener.position.toFixed(1)}s
+                          Position: {listener.position.toFixed(0)}s
                         </div>
                         <div className="text-xs text-neutral-500">
                           State: {listener.state}

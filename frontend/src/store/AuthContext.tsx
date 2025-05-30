@@ -11,6 +11,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   login: (username: string, password: string) => Promise<void>;
+  register: (username: string, password: string) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -40,6 +41,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [router, queryClient]
   );
 
+  const register = useCallback(async (username: string, password: string) => {
+    await auth.register(username, password);
+  }, []);
+
   const logout = useCallback(() => {
     Cookies.remove("token");
     queryClient.setQueryData(["currentUser"], null);
@@ -52,6 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user: user || null,
         isLoading,
         login,
+        register,
         logout,
         isAuthenticated: !!user,
       }}

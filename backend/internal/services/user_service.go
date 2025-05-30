@@ -9,12 +9,13 @@ import (
 )
 
 type userService struct {
-	userRepo domain.UserRepository
+	userRepo      domain.UserRepository
+	uploadService UploadService
 }
 
 // NewUserService creates a new instance of UserService
-func NewUserService(userRepo domain.UserRepository) domain.UserService {
-	return &userService{userRepo: userRepo}
+func NewUserService(userRepo domain.UserRepository, uploadService UploadService) domain.UserService {
+	return &userService{userRepo: userRepo, uploadService: uploadService}
 }
 
 func (s *userService) Register(username, password string) error {
@@ -65,6 +66,12 @@ func (s *userService) UpdateProfile(username string, name string, profilePicture
 
 	user.Name = &name
 	if profilePicture != "" {
+		// save profile picture to storage and set the url to the user
+		// using upload service
+		profilePicture, err := s.uploadService.HandleProfilePictureUpload(profilePicture, NewFileService())
+		if err != nil {
+			return errors.New("failed to save profile picture: " + err.Error())
+		}
 		user.ProfilePicture = &profilePicture
 	} else {
 		user.ProfilePicture = nil

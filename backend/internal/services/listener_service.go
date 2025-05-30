@@ -8,13 +8,15 @@ import (
 )
 
 type listenerService struct {
-	cacheService domain.CacheService
+	usersRepository domain.UserRepository
+	cacheService    domain.CacheService
 }
 
 // NewListenerService creates a new instance of ListenerService
-func NewListenerService(cacheService domain.CacheService) domain.ListenerService {
+func NewListenerService(cacheService domain.CacheService, usersRepository domain.UserRepository) domain.ListenerService {
 	return &listenerService{
-		cacheService: cacheService,
+		cacheService:    cacheService,
+		usersRepository: usersRepository,
 	}
 }
 
@@ -43,12 +45,18 @@ func (s *listenerService) StartListening(username string, musicID uint) error {
 		}
 	}
 
+	user, err := s.usersRepository.FindByUsername(username)
+	if err != nil {
+		return err
+	}
+
 	// Create new listener
 	listener := &domain.Listener{
-		Username:  username,
-		MusicID:   musicID,
-		Position:  0,
-		UpdatedAt: time.Now(),
+		Username:       username,
+		Name:           user.Name,
+		ProfilePicture: user.ProfilePicture,
+		MusicID:        musicID,
+		Position:       0,
 	}
 
 	// Store individual listener
@@ -83,7 +91,6 @@ func (s *listenerService) UpdatePosition(username string, musicID uint, position
 	}
 
 	listener.Position = position
-	listener.UpdatedAt = time.Now()
 
 	if err := s.cacheService.Set(key, listener, 24*time.Hour); err != nil {
 		return err

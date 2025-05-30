@@ -24,6 +24,7 @@ type FileService interface {
 	ValidateAudioFile(extension string) error
 	EnsureDirectoryExists(dir string) error
 	DeleteFile(filePath string) error
+	GetImageExtensionFromBase64(base64file string) (string, error)
 }
 
 type fileService struct {
@@ -200,4 +201,18 @@ func (s *fileService) DownloadFile(url string, filePath string, linkValidator do
 	}
 
 	return filePath, nil
+}
+
+func (s *fileService) GetImageExtensionFromBase64(base64file string) (string, error) {
+	firstChar := base64file[0]
+	switch firstChar {
+	case '/':
+		return ".jpg", nil
+	case 'i':
+		return ".png", nil
+	case 'U':
+		return ".webp", nil
+	default:
+		return "", fmt.Errorf("invalid base64 file, character %d is not a valid image extension", firstChar)
+	}
 }

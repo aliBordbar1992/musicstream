@@ -27,7 +27,7 @@ type WebSocketController struct {
 }
 
 // NewWebSocketController creates a new instance of WebSocketController
-func NewWebSocketController(listenerService domain.ListenerService) *WebSocketController {
+func NewWebSocketController(listenerService domain.ListenerService, usersRepository domain.UserRepository) *WebSocketController {
 	broadcaster := NewBroadcaster()
 	controller := &WebSocketController{
 		listenerService: listenerService,
@@ -35,7 +35,7 @@ func NewWebSocketController(listenerService domain.ListenerService) *WebSocketCo
 	}
 
 	// Create and configure message handler
-	controller.messageHandler = NewDefaultMessageHandler(controller)
+	controller.messageHandler = NewDefaultMessageHandler(controller, usersRepository)
 
 	return controller
 }

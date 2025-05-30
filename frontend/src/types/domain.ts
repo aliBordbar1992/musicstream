@@ -77,6 +77,8 @@ export type ListenerState =
 
 export interface Listener {
   username: string;
+  name: string | null;
+  profile_picture: string | null;
   position: number;
   state: ListenerState;
 }
@@ -99,13 +101,20 @@ export type WebSocketPayload = {
   leave_session: Record<string, never>;
   play: { music_id: number; timestamp: number };
   get_listeners: Record<string, never>;
-  user_joined: { u: string; p?: number };
+  user_joined: { u: string; n: string | null; pp: string | null; p?: number };
   user_left: { u: string };
   progress: { u: string; p: number };
   seek: { u: string; p: number };
   pause: { u: string };
   resume: { u: string };
-  current_listeners: { l: Listener[] };
+  current_listeners: {
+    l: Array<{
+      u: string;
+      n: string | null;
+      pp: string | null;
+      p?: number;
+    }>;
+  };
 };
 
 export interface WebSocketMessage {

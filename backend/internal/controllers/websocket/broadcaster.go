@@ -47,16 +47,9 @@ func (b *Broadcaster) BroadcastToMusic(musicID uint, message []byte, sender stri
 
 // BroadcastUserJoined notifies all clients when a user joins
 func (b *Broadcaster) BroadcastUserJoined(username string, musicID uint) {
-	event := struct {
-		Type    string `json:"t"`
-		Payload struct {
-			Username string `json:"u"`
-		} `json:"p"`
-	}{
-		Type: "user_joined",
-		Payload: struct {
-			Username string `json:"u"`
-		}{
+	event := BaseEvent{
+		Type: EventTypeUserJoined,
+		Payload: UserEventPayload{
 			Username: username,
 		},
 	}
@@ -72,16 +65,9 @@ func (b *Broadcaster) BroadcastUserJoined(username string, musicID uint) {
 
 // BroadcastUserLeft notifies all clients when a user leaves
 func (b *Broadcaster) BroadcastUserLeft(username string, musicID uint) {
-	event := struct {
-		Type    string `json:"t"`
-		Payload struct {
-			Username string `json:"u"`
-		} `json:"p"`
-	}{
-		Type: "user_left",
-		Payload: struct {
-			Username string `json:"u"`
-		}{
+	event := BaseEvent{
+		Type: EventTypeUserLeft,
+		Payload: UserEventPayload{
 			Username: username,
 		},
 	}

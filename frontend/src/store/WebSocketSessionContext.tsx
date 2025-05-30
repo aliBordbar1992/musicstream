@@ -113,7 +113,12 @@ export function WebSocketSessionProvider({
           const data = JSON.parse(message) as WebSocketMessage;
 
           if (isUserJoinedMessage(data)) {
-            addListener(data.p.u, data.p.p || 0);
+            addListener(
+              data.p.u,
+              data.p.n !== null ? data.p.n : data.p.u,
+              data.p.pp,
+              data.p.p || 0
+            );
           } else if (isUserLeftMessage(data)) {
             removeListener(data.p.u);
           } else if (isProgressMessage(data)) {
@@ -127,12 +132,17 @@ export function WebSocketSessionProvider({
             updateListenerState(data.p.u, "playing");
           } else if (isCurrentListenersMessage(data)) {
             data.p.l.forEach((listener) => {
-              addListener(listener.username, listener.position);
+              addListener(
+                listener.u,
+                listener.n !== null ? listener.n : listener.u,
+                listener.pp,
+                listener.p || 0
+              );
             });
 
             // remove other listeners not in the list
             listeners.forEach((listener) => {
-              if (!data.p.l.some((l) => l.username === listener.username)) {
+              if (!data.p.l.some((l) => l.u === listener.username)) {
                 removeListener(listener.username);
               }
             });
@@ -150,7 +160,12 @@ export function WebSocketSessionProvider({
     const playHandler = (event: PlayerEvent) => {
       // Update local state
       if (event.musicId) {
-        addListener(user?.username || "", event.progress || 0);
+        addListener(
+          user?.username || "",
+          user?.name || user?.username || "",
+          user?.profile_picture || null,
+          event.progress || 0
+        );
         updateListenerState(user?.username || "", "playing");
       }
       // Send to server

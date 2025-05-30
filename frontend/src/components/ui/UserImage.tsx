@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { UserCircleIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
-
+import { API_URL } from "@/lib/api";
 interface UserImageProps {
   src?: string | null;
   alt: string;
@@ -39,7 +39,7 @@ export default function UserImage({
   return (
     <div className={`relative ${sizeClass} ${className}`}>
       <Image
-        src={src}
+        src={API_URL + "/" + src.replaceAll("\\", "/")}
         alt={alt}
         fill
         className="object-cover rounded-full"

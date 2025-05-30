@@ -6,15 +6,20 @@ import Link from "next/link";
 import { LayoutContent } from "@/components/layouts/LayoutContent";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
+import SecurityWarning from "@/components/features/auth/SecurityWarning";
+
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isWarningAccepted, setIsWarningAccepted] = useState(false);
   const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isWarningAccepted) return;
+
     setError("");
     setIsLoading(true);
 
@@ -36,6 +41,8 @@ export default function LoginPage() {
           className="mb-8 space-y-6 bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-sm"
           onSubmit={handleSubmit}
         >
+          <SecurityWarning onAccept={setIsWarningAccepted} />
+
           <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
             <Input
               id="username"
@@ -62,6 +69,7 @@ export default function LoginPage() {
           <Button
             type="submit"
             isLoading={isLoading}
+            disabled={!isWarningAccepted}
             className={`w-full ${isLoading ? "" : "py-4"}`}
           >
             {isLoading ? "" : "Sign in"}
