@@ -43,6 +43,15 @@ type ListenersPayload struct {
 	Listeners []*domain.Listener `json:"l"`
 }
 
+// ChatMessagePayload represents the payload for chat messages
+type ChatMessagePayload struct {
+	Username       string  `json:"u"`
+	Name           *string `json:"n,omitempty"`
+	ProfilePicture *string `json:"pp,omitempty"`
+	Message        string  `json:"m"`
+	Timestamp      int64   `json:"ts"`
+}
+
 // Event types
 const (
 	EventTypeUserJoined       = "user_joined"
@@ -55,4 +64,5 @@ const (
 	EventTypeSeek             = "seek"
 	EventTypePause            = "pause"
 	EventTypeResume           = "resume"
+	EventTypeChatMessage      = "chat_message"
 )

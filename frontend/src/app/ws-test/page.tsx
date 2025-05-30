@@ -8,6 +8,7 @@ import { useWebSocketSession } from "@/store/WebSocketSessionContext";
 import Button from "@/components/ui/Button";
 import { useQuery } from "@tanstack/react-query";
 import UserImage from "@/components/ui/UserImage";
+import { Chat } from "@/components/features/Chat";
 
 export default function WebSocketTestPage() {
   const { isConnected, currentMusicId, listeners, disconnect } =
@@ -20,9 +21,9 @@ export default function WebSocketTestPage() {
 
   return (
     <LayoutContent>
-      <div className="max-w-5xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-8">
         <h1 className="text-2xl font-bold mb-6">WebSocket Test Page</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
             <h2 className="text-lg font-semibold mb-4">Music List</h2>
             <MusicList music={musicList || []} loading={isLoading} />
@@ -69,6 +70,12 @@ export default function WebSocketTestPage() {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold mb-4">Chat</h2>
+            <div className="h-96">
+              <Chat currentMusicId={currentMusicId} />
             </div>
           </div>
         </div>

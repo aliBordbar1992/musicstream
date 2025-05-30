@@ -3,6 +3,7 @@ import {
   PlayerEvent,
   SessionState,
   EventQueue,
+  ChatEvent,
 } from "@/types/domain";
 import { SessionManager } from "@/store/websocket/sessionManager";
 
@@ -209,15 +210,22 @@ export class WebSocketManager {
       !this.socketState.isConnected ||
       !this.sessionManager.getState().musicId
     ) {
-      return;
+      throw new Error("WebSocket is not connected or no active session");
     }
 
-    const event: PlayerEvent = {
-      type: "chat_message",
-      message,
-      timestamp: Date.now(),
+    const event = {
+      t: "chat_message",
+      p: {
+        m: message,
+      },
     };
 
-    await this.sendEvent(event);
+    try {
+      this.ws?.send(JSON.stringify(event));
+      this.updateActivity();
+    } catch (error) {
+      console.error("Failed to send chat message:", error);
+      throw new Error("Failed to send chat message");
+    }
   }
 }

@@ -3,6 +3,7 @@ package websocket
 import (
 	"encoding/json"
 	"log"
+	"time"
 
 	"github.com/aliBordbar1992/musicstream-backend/internal/domain"
 )
@@ -68,6 +69,8 @@ func (h *DefaultMessageHandler) HandleMessage(client *Client, message []byte) {
 		h.handlePause(client)
 	case EventTypeResume:
 		h.handleResume(client)
+	case EventTypeChatMessage:
+		h.handleChatMessage(client, event.Payload)
 	default:
 		log.Printf("Unknown message type: %s", event.Type)
 	}
@@ -278,6 +281,45 @@ func (h *DefaultMessageHandler) handleResume(client *Client) {
 	eventData, err := json.Marshal(event)
 	if err != nil {
 		log.Printf("Failed to marshal resume event: %v", err)
+		return
+	}
+
+	h.sessionManager.BroadcastToMusic(*client.musicID, eventData, client.username)
+}
+
+func (h *DefaultMessageHandler) handleChatMessage(client *Client, payload interface{}) {
+	var data ChatMessagePayload
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		log.Printf("Failed to marshal payload: %v", err)
+		return
+	}
+
+	if err := json.Unmarshal(payloadBytes, &data); err != nil {
+		log.Printf("Failed to unmarshal chat message payload: %v", err)
+		return
+	}
+
+	user, err := h.usersRepository.FindByUsername(client.username)
+	if err != nil {
+		log.Printf("Failed to get user: %v", err)
+		return
+	}
+
+	event := BaseEvent{
+		Type: EventTypeChatMessage,
+		Payload: ChatMessagePayload{
+			Username:       client.username,
+			Name:           user.Name,
+			ProfilePicture: user.ProfilePicture,
+			Message:        data.Message,
+			Timestamp:      time.Now().UnixMilli(),
+		},
+	}
+
+	eventData, err := json.Marshal(event)
+	if err != nil {
+		log.Printf("Failed to marshal chat message event: %v", err)
 		return
 	}
 
