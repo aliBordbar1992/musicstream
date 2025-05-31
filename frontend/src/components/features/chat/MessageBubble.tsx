@@ -65,8 +65,10 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
               borderTopRightRadius: "1rem",
               borderBottomLeftRadius: showTail
                 ? borderRadius.none
-                : borderRadius.md, // sharp near tail only if showTail is true
+                : borderRadius.md,
               borderBottomRightRadius: "1rem",
+              wordBreak: "break-word",
+              overflowWrap: "break-word",
             }}
           >
             {/* Username inside first bubble */}
@@ -84,7 +86,14 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
               </span>
             )}
             <div className="relative pb-6 pr-4">
-              <p style={{ textAlign: isMessageRTL ? "right" : "left" }}>
+              <p
+                className="whitespace-pre-wrap break-words"
+                style={{
+                  textAlign: isMessageRTL ? "right" : "left",
+                  wordBreak: "break-word",
+                  overflowWrap: "break-word",
+                }}
+              >
                 {children}
               </p>
 

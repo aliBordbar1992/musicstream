@@ -91,13 +91,6 @@ export function Chat({ currentMusicId }: ChatProps) {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleSendMessage(e as unknown as React.FormEvent);
-    }
-  };
-
   const mergedMessages: MergedMessage[] = [
     ...messages.map((msg) => ({ ...msg, pending: false, error: false })),
     ...pendingMessages.map((msg) => ({
@@ -149,28 +142,37 @@ export function Chat({ currentMusicId }: ChatProps) {
 
       <div className="p-4 border-t border-gray-700">
         <div className="flex gap-2">
-          <input
-            type="text"
+          <textarea
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            onKeyUp={handleKeyPress}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSendMessage(e as unknown as React.FormEvent);
+              }
+            }}
             placeholder={
               currentMusicId ? "Type a message..." : "Join a session to chat..."
             }
             disabled={!currentMusicId}
-            className={`flex-1 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 ${
+            rows={1}
+            className={`flex-1 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 resize-none min-h-[2.5rem] max-h-32 overflow-y-auto ${
               currentMusicId
                 ? "bg-gray-700 text-white focus:ring-blue-500"
                 : "bg-gray-700 text-gray-400 cursor-not-allowed"
             }`}
-            autoComplete="off"
+            style={{
+              wordBreak: "break-word",
+              overflowWrap: "break-word",
+              whiteSpace: "pre-wrap",
+            }}
           />
           <button
             onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
               handleSendMessage(e as unknown as React.FormEvent)
             }
             disabled={!currentMusicId}
-            className={`px-4 py-2 rounded-lg focus:outline-none focus:ring-2 ${
+            className={`px-4 py-2 rounded-lg focus:outline-none focus:ring-2 self-end ${
               currentMusicId
                 ? "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500"
                 : "bg-gray-700 text-gray-400 cursor-not-allowed"
