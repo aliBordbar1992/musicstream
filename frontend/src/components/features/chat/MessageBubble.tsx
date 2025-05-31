@@ -114,7 +114,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
             {/* Tail (only shown if showTail is true) */}
             {showTail && (
               <span
-                className="absolute bottom-0 left-[-10px] w-0 h-0"
+                className="absolute bottom-0 left-[-8px] w-0 h-0"
                 style={{
                   borderTop: "10px solid transparent",
                   borderBottom: "0 solid transparent",
