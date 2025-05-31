@@ -8,7 +8,7 @@ import { useWebSocketSession } from "@/store/WebSocketSessionContext";
 import Button from "@/components/ui/Button";
 import { useQuery } from "@tanstack/react-query";
 import UserImage from "@/components/ui/UserImage";
-import { Chat } from "@/components/features/Chat";
+import { Chat } from "@/components/features/chat/Chat";
 
 export default function WebSocketTestPage() {
   const { isConnected, currentMusicId, listeners, disconnect } =

@@ -3,7 +3,6 @@ import {
   PlayerEvent,
   SessionState,
   EventQueue,
-  ChatEvent,
 } from "@/types/domain";
 import { SessionManager } from "@/store/websocket/sessionManager";
 

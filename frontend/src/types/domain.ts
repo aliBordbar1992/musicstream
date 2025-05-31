@@ -214,6 +214,7 @@ export interface ChatMessage {
   username: string;
   name: string | null;
   profilePicture: string | null;
+  avatarUrl?: string;
   message: string;
   timestamp: number;
 }
