@@ -1,12 +1,11 @@
-import { Inter } from "next/font/google";
+import { iranYekan, inter } from "@/lib/fonts";
+import type { Metadata } from "next";
 import "./globals.css";
 import Providers from "@/components/layouts/Providers";
 
-const inter = Inter({ subsets: ["latin"] });
-
-export const metadata = {
-  title: "MuSync - Your Modern Music Platform",
-  description: "A modern music streaming platform built with Next.js and Go",
+export const metadata: Metadata = {
+  title: "MusicStream",
+  description: "Listen to music together with friends",
 };
 
 export default function RootLayout({
@@ -15,10 +14,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${inter.className} min-h-screen bg-background text-foreground antialiased`}
-      >
+    <html lang="en" className={`${iranYekan.variable} ${inter.variable}`}>
+      <body className={`${iranYekan.className} antialiased`}>
         <Providers>{children}</Providers>
       </body>
     </html>

@@ -50,8 +50,37 @@ const config: Config = {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
+        sans: ["var(--font-inter)"],
+        iranYekan: ["var(--font-iran-yekan)"],
+        vazirmatn: ["var(--font-vazirmatn)"],
         mono: ["JetBrains Mono", "monospace"],
+      },
+      fontSize: {
+        // Adjust base font sizes for IRANYekan
+        "iran-xs": [
+          "0.75rem",
+          { lineHeight: "1rem", letterSpacing: "-0.01em" },
+        ],
+        "iran-sm": [
+          "0.875rem",
+          { lineHeight: "1.25rem", letterSpacing: "-0.01em" },
+        ],
+        "iran-base": [
+          "0.9375rem",
+          { lineHeight: "1.5rem", letterSpacing: "-0.01em" },
+        ],
+        "iran-lg": [
+          "1rem",
+          { lineHeight: "1.75rem", letterSpacing: "-0.01em" },
+        ],
+        "iran-xl": [
+          "1.125rem",
+          { lineHeight: "1.75rem", letterSpacing: "-0.01em" },
+        ],
+        "iran-2xl": [
+          "1.25rem",
+          { lineHeight: "2rem", letterSpacing: "-0.01em" },
+        ],
       },
       animation: {
         "fade-in": "fade-in 0.5s ease-out",

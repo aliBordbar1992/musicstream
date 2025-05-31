@@ -87,7 +87,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
             )}
             <div className="relative pb-6 pr-4">
               <p
-                className="whitespace-pre-wrap break-words"
+                className={`whitespace-pre-wrap break-words ${
+                  isMessageRTL ? "font-iranYekan text-iran-sm" : ""
+                }`}
                 style={{
                   textAlign: isMessageRTL ? "right" : "left",
                   wordBreak: "break-word",
@@ -99,7 +101,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
 
               {time && (
                 <span
-                  className="absolute right-2 bottom-1 text-xs opacity-60"
+                  className={`absolute right-2 bottom-1 ${
+                    isMessageRTL ? "text-iran-xs" : "text-xs"
+                  } opacity-60`}
                   style={{ color: textColor }}
                 >
                   {time}
