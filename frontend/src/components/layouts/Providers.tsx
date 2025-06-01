@@ -7,7 +7,7 @@ import { AuthProvider } from "@/store/AuthContext";
 import { WebSocketSessionProvider } from "@/store/WebSocketSessionContext";
 import { useState } from "react";
 import { Toaster } from "react-hot-toast";
-import MusicPlayer from "../features/music/MusicPlayer";
+import MusicPlayer from "../features/music/player/MusicPlayer";
 import Navigation from "./Navigation";
 
 export default function Providers({ children }: { children: React.ReactNode }) {

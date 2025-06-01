@@ -62,7 +62,7 @@ func RegisterRoutes(r *gin.Engine) {
 	r.POST("/music/upload", utils.AuthMiddleware(), musicController.UploadMusic)
 	r.POST("/music/download", utils.AuthMiddleware(), musicController.DownloadMusicFromURL)
 	r.GET("/music/:id", utils.AuthMiddleware(), musicController.GetMusic)
-	r.GET("/music/:id/stream", utils.AuthMiddleware(), musicController.StreamMusic)
+	r.GET("/music/:id/stream", musicController.StreamMusic)
 	r.GET("/music", utils.AuthMiddleware(), musicController.ListMusic)
 	r.GET("/music/search", utils.AuthMiddleware(), musicController.SearchMusic)
 	r.DELETE("/music/:id", utils.AuthMiddleware(), musicController.DeleteMusic)
