@@ -36,3 +36,6 @@ Thumbs.db
 # Project specific
 backend/uploads/
 backend/.env 
+
+# certificates
+backend/certs/
