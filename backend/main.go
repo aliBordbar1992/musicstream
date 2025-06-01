@@ -83,6 +83,5 @@ func main() {
 	// Initialize services
 
 	RegisterRoutes(r)
-	r.UseH2C = true
-	r.Run(":8080")
+	r.RunTLS(":8080", "./certs/server.crt", "./certs/server.key")
 }

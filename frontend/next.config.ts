@@ -4,7 +4,7 @@ const nextConfig = {
     return [
       {
         source: "/:path*",
-        destination: "http://localhost:8080/:path*",
+        destination: "https://localhost:8080/:path*",
       },
     ];
   },
@@ -16,7 +16,9 @@ module.exports = {
   images: {
     remotePatterns: [
       new URL("https://placehold.co/**"),
-      new URL("http://localhost:8080/**"),
+      new URL("https://localhost:8080/**"),
     ],
   },
 };
+
+console.log(process.env.NODE_EXTRA_CA_CERTS);
