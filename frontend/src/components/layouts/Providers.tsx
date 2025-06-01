@@ -4,8 +4,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@/components/layouts/ThemeProvider";
 import { PlayerProvider } from "@/store/PlayerContext";
 import { AuthProvider } from "@/store/AuthContext";
-import { QueueSidebarProvider } from "@/store/QueueSidebarContext";
-import { QueueProvider } from "@/store/QueueContext";
 import { WebSocketSessionProvider } from "@/store/WebSocketSessionContext";
 import { useState } from "react";
 import { Toaster } from "react-hot-toast";
@@ -37,13 +35,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         >
           <PlayerProvider>
             <WebSocketSessionProvider>
-              <QueueProvider>
-                <QueueSidebarProvider>
-                  <Navigation />
-                  {children}
-                  <MusicPlayer />
-                </QueueSidebarProvider>
-              </QueueProvider>
+              <Navigation />
+              {children}
+              <MusicPlayer />
             </WebSocketSessionProvider>
           </PlayerProvider>
           <Toaster

@@ -14,10 +14,9 @@ import {
   QueueListIcon,
 } from "@heroicons/react/24/solid";
 import { usePlayer } from "@/store/PlayerContext";
-import { useQueueSidebar } from "@/store/QueueSidebarContext";
-import Cookies from "js-cookie";
 import { formatDuration } from "@/utils/formatDuration";
 import Image from "next/image";
+import { music } from "@/lib/api";
 export default function MusicPlayer() {
   const {
     currentTrack,
@@ -28,7 +27,7 @@ export default function MusicPlayer() {
     seek,
     updateProgress,
   } = usePlayer();
-  const { toggle: toggleQueue } = useQueueSidebar();
+  //const { toggle: toggleQueue } = useQueueSidebar();
   const [volume, setVolume] = useState(80);
   const [isMuted, setIsMuted] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -103,49 +102,15 @@ export default function MusicPlayer() {
           return;
         }
 
-        // If we've already loaded this track, don't fetch again
-        if (
-          hasLoadedAudio.current &&
-          currentTrackId.current === currentTrack.id &&
-          audioRef.current?.readyState !== undefined &&
-          audioRef.current?.readyState >= 2
-        ) {
-          isLoading.current = false;
-          return;
-        }
-
         // Clean up previous object URL if it exists
         if (objectUrlRef.current) {
           URL.revokeObjectURL(objectUrlRef.current);
           objectUrlRef.current = null;
         }
 
-        // Fetch the audio with proper headers
-        const token = Cookies.get("token");
-        if (!token) {
-          throw new Error("No authentication token found");
-        }
-
-        const url = currentTrack.url;
-        if (!url) {
-          throw new Error("No audio URL found");
-        }
-
-        const response = await fetch(url, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        // Create a blob from the response
-        const blob = await response.blob();
-
-        // Create an object URL from the blob
-        const objectUrl = URL.createObjectURL(blob);
+        // Create a MediaSource
+        const mediaSource = new MediaSource();
+        const objectUrl = URL.createObjectURL(mediaSource);
         objectUrlRef.current = objectUrl;
 
         // Initialize or update audio element
@@ -178,14 +143,95 @@ export default function MusicPlayer() {
           }
         });
 
-        // Set the source and other properties
-        audio.src = objectUrl;
-        audio.volume = volume / 100;
-        audio.muted = isMuted;
+        // Set up MediaSource event listeners
+        mediaSource.addEventListener("sourceopen", async () => {
+          try {
+            const sourceBuffer = mediaSource.addSourceBuffer("audio/mpeg");
+            const chunkSize = 64 * 1024; // 64KB chunk size
+            let currentPosition = 0;
+            let totalSize = 0;
 
-        if (isPlaying) {
-          await audio.play();
-        }
+            if (!currentTrack.url) {
+              throw new Error("No audio URL found");
+            }
+
+            const url = currentTrack.url as string;
+
+            // Function to load next chunk
+            const loadNextChunk = async () => {
+              if (currentPosition >= totalSize) return;
+
+              const end = Math.min(
+                currentPosition + chunkSize - 1,
+                totalSize - 1
+              );
+              const { data: chunk, contentRange } = await music.streamChunk(
+                url,
+                {
+                  start: currentPosition,
+                  end,
+                }
+              );
+
+              // Parse total size from Content-Range header if not set
+              if (!totalSize && contentRange) {
+                const match = contentRange.match(/bytes \d+-\d+\/(\d+)/);
+                if (match) {
+                  totalSize = parseInt(match[1]);
+                }
+              }
+
+              sourceBuffer.appendBuffer(chunk);
+              currentPosition = end + 1;
+            };
+
+            // Load initial chunk
+            const { data: initialChunk, contentRange } =
+              await music.streamChunk(url, {
+                start: 0,
+                end: chunkSize - 1,
+              });
+
+            // Parse total size from Content-Range header
+            if (contentRange) {
+              const match = contentRange.match(/bytes \d+-\d+\/(\d+)/);
+              if (match) {
+                totalSize = parseInt(match[1]);
+              }
+            }
+
+            sourceBuffer.appendBuffer(initialChunk);
+            currentPosition = chunkSize;
+
+            // Set up event listeners for buffering
+            sourceBuffer.addEventListener("updateend", () => {
+              if (sourceBuffer.updating) return;
+
+              const currentTime = audioRef.current?.currentTime || 0;
+              const bufferedEnd = sourceBuffer.buffered.end(
+                sourceBuffer.buffered.length - 1
+              );
+
+              // If we're close to the end of the buffer, load more
+              if (bufferedEnd - currentTime < 10) {
+                // 10 seconds threshold
+                loadNextChunk();
+              }
+            });
+
+            // Set audio properties
+            audio.src = objectUrl;
+            audio.volume = volume / 100;
+            audio.muted = isMuted;
+
+            if (isPlaying) {
+              await audio.play();
+            }
+          } catch (error) {
+            console.error("Error setting up MediaSource:", error);
+            pause();
+          }
+        });
 
         audioRef.current = audio;
       } catch (error) {
@@ -396,7 +442,7 @@ export default function MusicPlayer() {
             {/* Volume and queue controls */}
             <div className="flex items-center space-x-4 min-w-[200px] w-[25%] justify-end">
               <button
-                onClick={toggleQueue}
+                //onClick={toggleQueue}
                 className="p-2 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full transition-colors"
                 aria-label="Toggle queue"
               >

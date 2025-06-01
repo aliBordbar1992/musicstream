@@ -1,8 +1,7 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 import { Music } from "@/types/domain";
-export const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+export const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const api = axios.create({
   baseURL: API_URL,
@@ -71,6 +70,22 @@ export const music = {
     return response.data;
   },
   stream: (id: number) => `${API_URL}/music/${id}/stream`,
+  streamChunk: async (url: string, range: { start: number; end: number }) => {
+    const response = await fetch(url, {
+      headers: {
+        Range: `bytes=${range.start}-${range.end}`,
+      },
+    });
+
+    if (!response.ok && response.status !== 206) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return {
+      data: await response.arrayBuffer(),
+      contentRange: response.headers.get("Content-Range"),
+    };
+  },
   delete: async (id: number) => {
     await api.delete(`/music/${id}`);
   },

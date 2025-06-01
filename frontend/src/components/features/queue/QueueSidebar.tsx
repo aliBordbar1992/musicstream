@@ -1,4 +1,4 @@
-"use client";
+/* "use client";
 
 import React from "react";
 import { QueueList } from "./QueueList";
@@ -34,3 +34,4 @@ export function QueueSidebar({ isOpen, onClose }: QueueSidebarProps) {
     </AnimatePresence>
   );
 }
+ */

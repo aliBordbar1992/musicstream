@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+/* import { useState, useEffect, useRef } from "react";
 import Cookies from "js-cookie";
 import { PlayerTrack } from "@/types/domain";
+import { music } from "@/lib/api";
 
 interface AudioPlayerState {
   volume: number;
@@ -27,7 +28,7 @@ export const useAudioPlayer = (
   onPlayStateChange: (isPlaying: boolean) => void,
   onTrackEnd: () => void
 ): [AudioPlayerState, AudioPlayerControls] => {
-  const [state, setState] = useState<AudioPlayerState>({
+  const [audioState, setAudioState] = useState<AudioPlayerState>({
     volume: 80,
     isMuted: false,
     progress: 0,
@@ -66,7 +67,7 @@ export const useAudioPlayer = (
 
       try {
         isLoading.current = true;
-        setState((prev) => ({ ...prev, isLoading: true }));
+        setAudioState((prev) => ({ ...prev, isLoading: true }));
 
         // Check if audio is already loaded
         if (
@@ -82,7 +83,7 @@ export const useAudioPlayer = (
             await audioRef.current.play();
           }
           isLoading.current = false;
-          setState((prev) => ({ ...prev, isLoading: false }));
+          setAudioState((prev) => ({ ...prev, isLoading: false }));
           return;
         }
 
@@ -99,25 +100,83 @@ export const useAudioPlayer = (
         const url = currentTrack.url;
         if (!url) throw new Error("No audio URL found");
 
-        const response = await fetch(url, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        // Calculate range for initial chunk
+        const chunkSize = 64 * 1024; // 64KB chunk size
+        const range = { start: 0, end: chunkSize - 1 };
 
-        if (!response.ok)
-          throw new Error(`HTTP error! status: ${response.status}`);
+        const { data: initialChunk, contentRange } = await music.streamChunk(
+          url,
+          range
+        );
+        const totalSize = contentRange
+          ? parseInt(contentRange.split("/")[1])
+          : 0;
 
-        const blob = await response.blob();
-        const objectUrl = URL.createObjectURL(blob);
+        // Create a MediaSource
+        const mediaSource = new MediaSource();
+        const objectUrl = URL.createObjectURL(mediaSource);
         objectUrlRef.current = objectUrl;
 
         if (!audioRef.current) {
           audioRef.current = new Audio();
         }
 
+        // Set up MediaSource event listeners
+        mediaSource.addEventListener("sourceopen", async () => {
+          try {
+            const sourceBuffer = mediaSource.addSourceBuffer("audio/mpeg");
+
+            // Function to load next chunk
+            const loadNextChunk = async (start: number) => {
+              if (start >= totalSize) return;
+
+              const end = Math.min(start + chunkSize - 1, totalSize - 1);
+              const { data: chunk } = await music.streamChunk(url, {
+                start,
+                end,
+              });
+              sourceBuffer.appendBuffer(chunk);
+            };
+
+            // Load initial chunk
+            sourceBuffer.appendBuffer(initialChunk);
+
+            // Set up event listeners for buffering
+            sourceBuffer.addEventListener("updateend", () => {
+              if (sourceBuffer.updating) return;
+
+              const currentTime = audioRef.current?.currentTime || 0;
+              const bufferedEnd = sourceBuffer.buffered.end(
+                sourceBuffer.buffered.length - 1
+              );
+
+              // If we're close to the end of the buffer, load more
+              if (bufferedEnd - currentTime < 10) {
+                // 10 seconds threshold
+                loadNextChunk(Math.floor(bufferedEnd * 1024)); // Convert to bytes
+              }
+            });
+
+            // Set audio properties
+            if (!audioRef.current) return;
+
+            audioRef.current.src = objectUrl;
+            audioRef.current.volume = audioState.volume / 100;
+            audioRef.current.muted = audioState.isMuted;
+
+            if (isPlaying) {
+              await audioRef.current.play();
+            }
+          } catch (error) {
+            console.error("Error setting up MediaSource:", error);
+            onPlayStateChange(false);
+          }
+        });
+
         // Set up event listeners
         const handleLoadedMetadata = () => {
           if (audioRef.current && isMounted.current) {
-            setState((prev) => ({
+            setAudioState((prev) => ({
               ...prev,
               duration: audioRef.current!.duration,
             }));
@@ -139,7 +198,7 @@ export const useAudioPlayer = (
           if (audioRef.current && isMounted.current) {
             const newTime = audioRef.current.currentTime;
             const newProgress = (newTime / audioRef.current.duration) * 100;
-            setState((prev) => ({
+            setAudioState((prev) => ({
               ...prev,
               currentTime: newTime,
               progress: newProgress,
@@ -152,15 +211,6 @@ export const useAudioPlayer = (
           handleLoadedMetadata
         );
         audioRef.current.addEventListener("timeupdate", handleTimeUpdate);
-
-        // Set audio properties
-        audioRef.current.src = objectUrl;
-        audioRef.current.volume = state.volume / 100;
-        audioRef.current.muted = state.isMuted;
-
-        if (isPlaying) {
-          await audioRef.current.play();
-        }
       } catch (error) {
         console.error("Error loading audio:", error);
         if (isMounted.current) {
@@ -168,7 +218,7 @@ export const useAudioPlayer = (
         }
       } finally {
         isLoading.current = false;
-        setState((prev) => ({ ...prev, isLoading: false }));
+        setAudioState((prev) => ({ ...prev, isLoading: false }));
       }
     };
 
@@ -182,8 +232,8 @@ export const useAudioPlayer = (
     currentTrack?.id,
     isPlaying,
     onPlayStateChange,
-    state.isMuted,
-    state.volume,
+    audioState.isMuted,
+    audioState.volume,
   ]);
 
   // Handle play/pause state
@@ -203,9 +253,9 @@ export const useAudioPlayer = (
   // Handle volume and mute changes
   useEffect(() => {
     if (!audioRef.current) return;
-    audioRef.current.volume = state.volume / 100;
-    audioRef.current.muted = state.isMuted;
-  }, [state.volume, state.isMuted]);
+    audioRef.current.volume = audioState.volume / 100;
+    audioRef.current.muted = audioState.isMuted;
+  }, [audioState.volume, audioState.isMuted]);
 
   // Set up audio event listeners
   useEffect(() => {
@@ -214,7 +264,7 @@ export const useAudioPlayer = (
 
     const handleEnded = () => {
       onPlayStateChange(false);
-      setState((prev) => ({
+      setAudioState((prev) => ({
         ...prev,
         progress: 0,
         currentTime: 0,
@@ -238,16 +288,16 @@ export const useAudioPlayer = (
 
   const controls: AudioPlayerControls = {
     setVolume: (volume: number) => {
-      setState((prev) => ({ ...prev, volume }));
+      setAudioState((prev) => ({ ...prev, volume }));
     },
     setIsMuted: (isMuted: boolean) => {
-      setState((prev) => ({ ...prev, isMuted }));
+      setAudioState((prev) => ({ ...prev, isMuted }));
     },
     setProgress: (progress: number) => {
       if (!audioRef.current || isNaN(audioRef.current.duration)) return;
       const newTime = (progress / 100) * audioRef.current.duration;
       audioRef.current.currentTime = newTime;
-      setState((prev) => ({
+      setAudioState((prev) => ({
         ...prev,
         progress,
         currentTime: newTime,
@@ -268,7 +318,7 @@ export const useAudioPlayer = (
     seek: (time: number) => {
       if (audioRef.current) {
         audioRef.current.currentTime = time;
-        setState((prev) => ({
+        setAudioState((prev) => ({
           ...prev,
           currentTime: time,
           progress: (time / audioRef.current!.duration) * 100,
@@ -284,5 +334,6 @@ export const useAudioPlayer = (
     },
   };
 
-  return [state, controls];
+  return [audioState, controls];
 };
+ */

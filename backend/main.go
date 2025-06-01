@@ -83,5 +83,6 @@ func main() {
 	// Initialize services
 
 	RegisterRoutes(r)
+	r.UseH2C = true
 	r.Run(":8080")
 }
