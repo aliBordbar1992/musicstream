@@ -1,39 +1,37 @@
 "use client";
 
-import { useRef, useCallback } from "react";
+import { useRef } from "react";
 import { motion } from "framer-motion";
 import {
-  PlayIcon,
-  PauseIcon,
-  ForwardIcon,
-  BackwardIcon,
   SpeakerWaveIcon,
   SpeakerXMarkIcon,
   XMarkIcon,
   QueueListIcon,
 } from "@heroicons/react/24/solid";
-import { usePlayer } from "@/store/PlayerContext";
 import { useAudioController } from "@/hooks/useAudioController";
 import { TrackInfo } from "./TrackInfo";
 import { ProgressSlider } from "./ProgressSlider";
 import { VolumeSlider } from "./VolumeSlider";
+import { MusicControls } from "./MusicControls";
 
 export default function MusicPlayer() {
-  const { currentTrack, isPlaying, clearTrack, pause, resume } = usePlayer();
-
   const audioRef = useRef<HTMLAudioElement>(null!);
 
   const {
-    duration,
+    currentTrack,
     currentTime,
     progress,
     buffered,
-    handleProgressChange,
-    handleVolumeChange,
     volume,
     isMuted,
+    isPlaying,
+    clearTrack,
+    handleProgressChange,
+    handleVolumeChange,
     toggleMute,
-  } = useAudioController(audioRef, currentTrack, isPlaying);
+    handlePause,
+    handlePlay,
+  } = useAudioController(audioRef);
 
   const handleClose = () => {
     if (audioRef.current) {
@@ -43,11 +41,6 @@ export default function MusicPlayer() {
     }
     clearTrack();
   };
-
-  const togglePlayPause = useCallback(() => {
-    if (isPlaying) pause();
-    else resume();
-  }, [isPlaying, pause, resume]);
 
   if (!currentTrack) return null;
 
@@ -60,14 +53,14 @@ export default function MusicPlayer() {
       <audio ref={audioRef} preload="metadata" hidden />
       <button
         onClick={handleClose}
-        className="absolute top-negative-1 right-4 z-20 p-2 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full shadow transition-colors bg-white dark:bg-neutral-800"
+        className="player-button-close"
         aria-label="Close player"
       >
         <XMarkIcon className="h-5 w-5" />
       </button>
       <div className="w-full flex flex-col gap-4">
         <ProgressSlider
-          duration={duration}
+          duration={currentTrack.duration}
           currentTime={currentTime}
           progress={progress}
           buffered={buffered}
@@ -76,50 +69,22 @@ export default function MusicPlayer() {
 
         <div className="flex items-center">
           <TrackInfo track={currentTrack} />
-
-          <div className="flex items-center justify-center space-x-4 flex-1">
-            <button
-              onClick={() => {
-                // TODO: Implement previous track
-              }}
-              className="p-2 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full transition-colors"
-              aria-label="Previous track"
-            >
-              <BackwardIcon className="h-6 w-6" />
-            </button>
-            <button
-              onClick={togglePlayPause}
-              className="p-3 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full transition-colors"
-              aria-label={isPlaying ? "Pause" : "Play"}
-            >
-              {isPlaying ? (
-                <PauseIcon className="h-8 w-8" />
-              ) : (
-                <PlayIcon className="h-8 w-8" />
-              )}
-            </button>
-            <button
-              onClick={() => {
-                // TODO: Implement next track
-              }}
-              className="p-2 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full transition-colors"
-              aria-label="Next track"
-            >
-              <ForwardIcon className="h-6 w-6" />
-            </button>
-          </div>
+          <MusicControls
+            isPlaying={isPlaying}
+            togglePlayPause={isPlaying ? handlePause : handlePlay}
+          />
 
           <div className="flex items-center space-x-4 min-w-[200px] w-[25%] justify-end">
             <button
               //onClick={toggleQueue}
-              className="p-2 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full transition-colors"
+              className="player-button"
               aria-label="Toggle queue"
             >
               <QueueListIcon className="h-6 w-6" />
             </button>
             <button
               onClick={toggleMute}
-              className="p-2 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full transition-colors"
+              className="player-button"
               aria-label={isMuted ? "Unmute" : "Mute"}
             >
               {isMuted ? (

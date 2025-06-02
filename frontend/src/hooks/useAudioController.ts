@@ -1,18 +1,20 @@
 import { useState, useEffect, useCallback, RefObject } from "react";
 import debounce from "lodash/debounce";
 import { usePlayer } from "@/store/PlayerContext";
-import { PlayerTrack } from "@/types/domain";
 
-export function useAudioController(
-  audioRef: RefObject<HTMLAudioElement>,
-  currentTrack: PlayerTrack | null,
-  isPlaying: boolean
-) {
-  const { pause, resume, seek, updateProgress } = usePlayer();
+export function useAudioController(audioRef: RefObject<HTMLAudioElement>) {
+  const {
+    isPlaying,
+    currentTrack,
+    pause,
+    resume,
+    seek,
+    updateProgress,
+    clearTrack,
+  } = usePlayer();
   const [volume, setVolume] = useState(80);
   const [isMuted, setIsMuted] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [buffered, setBuffered] = useState(0);
 
@@ -39,6 +41,29 @@ export function useAudioController(
     [updateProgress]
   );
 
+  const handlePlay = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (audio.paused) {
+      audio.play().catch((error) => {
+        console.error("Error playing audio:", error);
+        pause();
+      });
+      resume();
+    }
+  }, [audioRef, pause, resume]);
+
+  const handlePause = useCallback(() => {
+    if (isPlaying) {
+      const audio = audioRef.current;
+      if (!audio) return;
+
+      audio.pause();
+      pause();
+    }
+  }, [audioRef, isPlaying, pause]);
+
   // Consolidated effect for audio management
   useEffect(() => {
     const audio = audioRef.current;
@@ -46,12 +71,8 @@ export function useAudioController(
 
     // Set up event listeners
     const handleLoadedMetadata = () => {
-      setDuration(audio.duration);
       if (isPlaying) {
-        audio.play().catch((error) => {
-          console.error("Error playing audio:", error);
-          pause();
-        });
+        handlePlay();
       }
     };
 
@@ -60,7 +81,7 @@ export function useAudioController(
     };
 
     const handleEnded = () => {
-      pause();
+      handlePause();
       setProgress(0);
       setCurrentTime(0);
     };
@@ -71,23 +92,11 @@ export function useAudioController(
       console.error("Audio source:", audioElement.src);
       console.error("Audio error code:", audioElement.error?.code);
       console.error("Audio error message:", audioElement.error?.message);
-      pause();
+      handlePause();
     };
 
     const handleProgress = () => {
       updateProgressState(audio);
-    };
-
-    const handlePlay = () => {
-      if (!isPlaying) {
-        resume();
-      }
-    };
-
-    const handlePause = () => {
-      if (isPlaying) {
-        pause();
-      }
     };
 
     // Add event listeners
@@ -101,28 +110,30 @@ export function useAudioController(
 
     // Update audio properties
     if (currentTrack?.url) {
-      // Reset audio state before loading new source
-      audio.pause();
-      audio.currentTime = 0;
+      // reset audio state if the track URL has changed
+      if (audio.src.indexOf(currentTrack.url) === -1) {
+        audio.pause();
+        audio.currentTime = 0;
 
-      // Ensure the URL is properly encoded and includes necessary headers
-      try {
-        const url = new URL(currentTrack.url);
-        // Add cache-busting parameter to prevent caching issues
-        url.searchParams.set("t", Date.now().toString());
-        audio.src = url.toString();
+        // Ensure the URL is properly encoded and includes necessary headers
+        try {
+          const url = new URL(currentTrack.url);
+          // Add cache-busting parameter to prevent caching issues
+          url.searchParams.set("t", Date.now().toString());
+          audio.src = url.toString();
 
-        // Set necessary audio properties
-        audio.preload = "metadata";
-        audio.crossOrigin = "anonymous"; // Enable CORS if needed
-      } catch {
-        console.error("Invalid audio URL:", currentTrack.url);
-        pause();
-        return;
+          // Set necessary audio properties
+          audio.preload = "metadata";
+          audio.crossOrigin = "anonymous"; // Enable CORS if needed
+        } catch {
+          console.error("Invalid audio URL:", currentTrack.url);
+          handlePause();
+          return;
+        }
+
+        // Load the new source
+        audio.load();
       }
-
-      // Load the new source
-      audio.load();
     }
 
     // Set volume and mute state
@@ -131,12 +142,9 @@ export function useAudioController(
 
     // Handle play/pause state
     if (isPlaying && currentTrack?.url) {
-      audio.play().catch((error) => {
-        console.error("Error playing audio:", error);
-        pause();
-      });
+      handlePlay();
     } else {
-      audio.pause();
+      handlePause();
     }
 
     return () => {
@@ -152,11 +160,12 @@ export function useAudioController(
     audioRef,
     currentTrack?.url,
     isPlaying,
-    pause,
-    resume,
-    updateProgressState,
     volume,
     isMuted,
+    updateProgressState,
+    handlePlay,
+    handlePause,
+    pause,
   ]);
 
   const debouncedSeek = debounce((value: number) => {
@@ -192,14 +201,18 @@ export function useAudioController(
   }, [isMuted]);
 
   return {
-    duration,
+    currentTrack,
     currentTime,
     progress,
     buffered,
-    handleProgressChange,
-    handleVolumeChange,
     volume,
     isMuted,
+    isPlaying,
+    clearTrack,
+    handleProgressChange,
+    handleVolumeChange,
     toggleMute,
+    handlePause,
+    handlePlay,
   };
 }

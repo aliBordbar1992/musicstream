@@ -7,8 +7,8 @@ interface TrackInfoProps {
 
 export function TrackInfo({ track }: TrackInfoProps) {
   return (
-    <div className="flex items-center space-x-6 min-w-[200px] w-[25%]">
-      <div className="w-16 h-16 bg-neutral-200 dark:bg-neutral-700 rounded-md overflow-hidden flex-shrink-0">
+    <div className="track-info">
+      <div className="track-image">
         {track.image && (
           <Image
             key={track.id}
@@ -19,12 +19,8 @@ export function TrackInfo({ track }: TrackInfoProps) {
         )}
       </div>
       <div className="flex flex-col">
-        <span className="font-medium text-neutral-900 dark:text-white">
-          {track.title}
-        </span>
-        <span className="text-sm text-neutral-500 dark:text-neutral-400">
-          {track.artist}
-        </span>
+        <span className="track-title">{track.title}</span>
+        <span className="track-artist">{track.artist}</span>
       </div>
     </div>
   );

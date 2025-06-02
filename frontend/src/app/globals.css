@@ -62,3 +62,59 @@
     top: -1rem !important;
   }
 }
+
+@layer components {
+  .player-button {
+    @apply p-2 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full transition-colors;
+  }
+
+  .player-button-play {
+    @apply p-3 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full transition-colors;
+  }
+
+  .player-button-close {
+    @apply absolute top-negative-1 right-4 z-20 p-2 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full shadow transition-colors bg-white dark:bg-neutral-800;
+  }
+
+  .slider-root {
+    @apply relative flex items-center select-none touch-none w-full h-6;
+  }
+
+  .slider-track {
+    @apply bg-neutral-200 dark:bg-neutral-700 relative grow rounded-full h-1.5;
+  }
+
+  .slider-range {
+    @apply absolute rounded-full h-full;
+    background-color: hsl(var(--primary));
+  }
+
+  .slider-thumb {
+    @apply block w-4 h-4 bg-white dark:bg-neutral-100 shadow-lg rounded-full hover:bg-neutral-50 dark:hover:bg-neutral-200 focus:outline-none focus:ring-2;
+    focus-ring-color: hsl(var(--primary));
+  }
+
+  .slider-buffered {
+    @apply absolute bg-neutral-300 dark:bg-neutral-600 rounded-full h-full;
+  }
+
+  .slider-time {
+    @apply text-sm text-neutral-500 dark:text-neutral-400 min-w-[40px];
+  }
+
+  .track-info {
+    @apply flex items-center space-x-6 min-w-[200px] w-[25%];
+  }
+
+  .track-image {
+    @apply w-16 h-16 bg-neutral-200 dark:bg-neutral-700 rounded-md overflow-hidden flex-shrink-0;
+  }
+
+  .track-title {
+    @apply font-medium text-neutral-900 dark:text-white;
+  }
+
+  .track-artist {
+    @apply text-sm text-neutral-500 dark:text-neutral-400;
+  }
+}

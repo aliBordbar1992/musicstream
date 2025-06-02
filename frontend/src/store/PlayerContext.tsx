@@ -20,6 +20,7 @@ const initialState: PlayerState = {
 function playerReducer(state: PlayerState, action: PlayerAction): PlayerState {
   switch (action.type) {
     case "PLAY_TRACK":
+      console.log("PLAY_TRACK", action.payload);
       return {
         currentTrack: action.payload,
         isPlaying: true,
