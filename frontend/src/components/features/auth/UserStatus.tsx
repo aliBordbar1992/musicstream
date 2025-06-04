@@ -2,11 +2,15 @@
 
 import Link from "next/link";
 import UserImage from "@/components/ui/UserImage";
-import { useAuth } from "@/store/AuthContext";
+import { User } from "@/types/domain";
 
-export function UserStatus() {
-  const { user, logout, isAuthenticated } = useAuth();
+export interface UserStatusProps {
+  isAuthenticated: boolean;
+  user: User | null;
+  logout: () => void;
+}
 
+export function UserStatus({ isAuthenticated, user, logout }: UserStatusProps) {
   if (!isAuthenticated) {
     return (
       <div className="flex items-center space-x-4">

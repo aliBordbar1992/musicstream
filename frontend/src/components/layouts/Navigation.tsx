@@ -11,11 +11,13 @@ import { useTheme } from "next-themes";
 import { SunIcon, MoonIcon } from "@heroicons/react/24/outline";
 import { useEffect, useState } from "react";
 import { UserStatus } from "@/components/features/auth/UserStatus";
+import { useAuth } from "@/store/AuthContext";
 
 export default function Navigation() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const { user, isAuthenticated, logout } = useAuth();
 
   useEffect(() => {
     setMounted(true);
@@ -83,7 +85,11 @@ export default function Navigation() {
                 )}
               </button>
             )}
-            <UserStatus />
+            <UserStatus
+              isAuthenticated={isAuthenticated}
+              user={user}
+              logout={logout}
+            />
           </div>
         </div>
       </div>

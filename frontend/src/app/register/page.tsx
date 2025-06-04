@@ -4,12 +4,11 @@ import { useAuth } from "@/store/AuthContext";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
-import SecurityWarning from "@/components/features/auth/SecurityWarning";
+import SecurityWarning from "@/features/auth/login/components/SecurityWarning";
 import { useState } from "react";
 import { LayoutContent } from "@/components/layouts/LayoutContent";
 
@@ -34,7 +33,6 @@ type RegisterFormData = yup.InferType<typeof schema>;
 
 export default function RegisterPage() {
   const { register: registerUser } = useAuth();
-  const router = useRouter();
   const [isWarningAccepted, setIsWarningAccepted] = useState(false);
   const {
     register,
@@ -50,7 +48,6 @@ export default function RegisterPage() {
     try {
       await registerUser(data.username, data.password);
       toast.success("Registration successful! Please login.");
-      router.push("/login");
     } catch {
       toast.error("Registration failed. Username may already be taken.");
     }

@@ -14,7 +14,7 @@ import ImagePicker from "@/components/ui/ImagePicker";
 export default function ProfilePage() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [name, setName] = useState<string>("");
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -42,11 +42,6 @@ export default function ProfilePage() {
       setIsLoading(false);
     }
   };
-
-  // Wait for auth state to be initialized
-  if (isAuthLoading) {
-    return <div>Loading...</div>;
-  }
 
   if (!isAuthenticated) {
     router.push("/login");
