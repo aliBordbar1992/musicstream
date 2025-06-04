@@ -10,7 +10,7 @@ import {
 import { useTheme } from "next-themes";
 import { SunIcon, MoonIcon } from "@heroicons/react/24/outline";
 import { useEffect, useState } from "react";
-import { UserStatus } from "@/components/features/auth/UserStatus";
+import { UserStatus } from "@/features/auth/components/UserStatus";
 import { useAuth } from "@/store/AuthContext";
 
 export default function Navigation() {

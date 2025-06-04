@@ -1,15 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import SecurityWarning from "@/features/auth/login/components/SecurityWarning";
-import LoginForm from "@/features/auth/login/components/LoginForm";
+import SecurityWarning from "@/features/auth/components/SecurityWarning";
+import LoginForm from "@/features/auth/components/LoginForm";
 import { LayoutContent } from "@/components/layouts/LayoutContent";
 import Link from "next/link";
 import { useAuthController } from "@/features/auth/useAuthController";
+import { useSearchParams } from "next/navigation";
 
 export default function LoginPage() {
   const [isWarningAccepted, setIsWarningAccepted] = useState(false);
   const { login } = useAuthController();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get("redirect");
 
   return (
     <LayoutContent>
@@ -20,16 +23,19 @@ export default function LoginPage() {
           <LoginForm
             isDisabled={!isWarningAccepted}
             formClassName="space-y-6"
-            onLogin={(username, password) => login(username, password, null)}
+            onLogin={(username, password) =>
+              login(username, password, redirect ?? null)
+            }
           />
-          <div className="text-sm text-center">
+          <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
+            Don&apos;t have an account?{" "}
             <Link
               href="/register"
               className="font-medium text-indigo-400 hover:text-indigo-500"
             >
-              Don&apos;t have an account? Register
+              Register
             </Link>
-          </div>
+          </p>
         </div>
       </div>
     </LayoutContent>
