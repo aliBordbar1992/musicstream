@@ -48,7 +48,7 @@ export default function RegisterForm({
 
     try {
       await onRegister(data.username, data.password);
-      toast.success("Registration successful! Please login.");
+      toast.success("Registration successful!");
     } catch {
       toast.error("Registration failed. Username may already be taken.");
     }
