@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { eventBus } from "@/lib/eventBus";
 import { ChatMessage } from "@/types/domain";
-import { useAuth } from "@/store/AuthContext";
+import { useAuth } from "@/features/auth/AuthContext";
 import ChatContainer from "./ChatContainer";
 
 interface ChatProps {

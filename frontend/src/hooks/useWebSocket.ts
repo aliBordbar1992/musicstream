@@ -1,7 +1,7 @@
 import { useRef, useEffect, useCallback } from "react";
 import { WebSocketManager } from "@/store/websocket/websocketManager";
 import { PlayerEvent } from "@/types/domain";
-import { useAuth } from "@/store/AuthContext";
+import { useAuth } from "@/features/auth/AuthContext";
 
 export function useWebSocket(wsUrl: string) {
   const managerRef = useRef<WebSocketManager | null>(null);

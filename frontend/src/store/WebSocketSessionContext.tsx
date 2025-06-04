@@ -11,7 +11,7 @@ import { useListeners } from "../hooks/useListeners";
 import { useWebSocket } from "../hooks/useWebSocket";
 import { API_URL } from "@/lib/api";
 import Cookies from "js-cookie";
-import { useAuth } from "@/store/AuthContext";
+import { useAuth } from "@/features/auth/AuthContext";
 import { WebSocketSessionContextType } from "@/types/context";
 
 const WebSocketSessionContext =

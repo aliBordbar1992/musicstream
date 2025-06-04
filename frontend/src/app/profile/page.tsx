@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
-import { useAuth } from "@/store/AuthContext";
+import { useAuth } from "@/features/auth/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { LayoutContent } from "@/components/layouts/LayoutContent";
 import { auth } from "@/lib/api";

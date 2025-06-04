@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { eventBus } from "@/lib/eventBus";
 import { ChatMessage } from "@/types/domain";
 import { format } from "date-fns";
-import { useAuth } from "@/store/AuthContext";
+import { useAuth } from "@/features/auth/AuthContext";
 import UserImage from "../ui/UserImage";
 
 interface ChatProps {
