@@ -26,7 +26,12 @@ export default function WebSocketTestPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
             <h2 className="text-lg font-semibold mb-4">Music List</h2>
-            <MusicList music={musicList || []} loading={isLoading} />
+            <MusicList
+              music={musicList || []}
+              isLoading={isLoading}
+              shouldShowDelete={() => false}
+              emptyState={() => <div>No music found</div>}
+            />
           </div>
           <div>
             <h2 className="text-lg font-semibold mb-4">Session Panel</h2>
