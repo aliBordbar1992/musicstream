@@ -56,6 +56,7 @@ func RegisterRoutes(r *gin.Engine) {
 	r.POST("/register", userController.Register)
 	r.POST("/login", userController.Login)
 	r.GET("/me", utils.AuthMiddleware(), userController.GetUser)
+	r.GET("/me/music", utils.AuthMiddleware(), musicController.GetUserMusic)
 	r.PUT("/me/profile", utils.AuthMiddleware(), userController.UpdateProfile)
 
 	// Music routes

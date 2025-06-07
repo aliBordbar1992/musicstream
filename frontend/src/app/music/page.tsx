@@ -2,24 +2,16 @@
 
 import { FileUploadForm } from "@/components/features/music/FileUploadForm";
 import { LinkUploadForm } from "@/components/features/music/LinkUploadForm";
-import { MusicList } from "@/components/features/music/MusicList";
-import { music } from "@/lib/api";
+import { MusicList } from "@/features/music/components/MusicList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { LayoutContent } from "@/components/layouts/LayoutContent";
-import { useQuery } from "@tanstack/react-query";
+import { useUserMusic } from "@/features/music/useMusicContrller";
 
 export default function MusicPage() {
-  const {
-    data: musicList,
-    isLoading,
-    refetch,
-  } = useQuery({
-    queryKey: ["music"],
-    queryFn: () => music.getAll(),
-  });
-
+  const { data: musicList, isLoading } = useUserMusic();
+  console.log("musicList", musicList);
   const handleUploadSuccess = () => {
-    refetch();
+    console.log("upload success");
   };
 
   return (
@@ -43,7 +35,7 @@ export default function MusicPage() {
         </Tabs>
 
         <MusicList
-          music={musicList}
+          music={musicList || []}
           loading={isLoading}
           onDelete={handleUploadSuccess}
         />

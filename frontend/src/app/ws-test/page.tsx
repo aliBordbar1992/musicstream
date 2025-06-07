@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { MusicList } from "@/components/features/music/MusicList";
+import { MusicList } from "@/features/music/components/MusicList";
 import { music } from "@/lib/api";
 import { LayoutContent } from "@/components/layouts/LayoutContent";
 import { useWebSocketSession } from "@/store/WebSocketSessionContext";

@@ -43,7 +43,7 @@ type MusicService interface {
 	UploadMusic(title string, artistID uint, album, filePath, username string, duration float64) (*Music, error)
 	GetMusic(id uint) (*Music, error)
 	ListAllMusic() ([]*Music, error)
-	DeleteMusic(id uint) error
+	DeleteMusic(id uint, username string) error
 	SearchMusic(query string) ([]*Music, error)
 	GetUserMusic(username string) ([]*Music, error)
 	GetMusicByArtist(artistID uint) ([]*Music, error)

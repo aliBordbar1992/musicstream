@@ -12,13 +12,14 @@ import { SunIcon, MoonIcon } from "@heroicons/react/24/outline";
 import { useEffect, useState } from "react";
 import { UserStatus } from "@/features/auth/components/UserStatus";
 import { useAuth } from "@/features/auth/AuthContext";
+import { useCurrentUser } from "@/features/auth/useCurrentUser";
 
 export default function Navigation() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const { user, isAuthenticated, logout } = useAuth();
-
+  const { logout } = useAuth();
+  const { isAuthenticated, user } = useCurrentUser();
   useEffect(() => {
     setMounted(true);
   }, []);

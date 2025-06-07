@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"time"
 
 	"github.com/aliBordbar1992/musicstream-backend/internal/domain"
@@ -55,15 +56,19 @@ func (s *musicService) ListAllMusic() ([]*domain.Music, error) {
 	return s.musicRepo.FindAll()
 }
 
-func (s *musicService) DeleteMusic(id uint) error {
+func (s *musicService) DeleteMusic(id uint, username string) error {
 	// Get the file path before deleting the record
-	filePath, err := s.musicRepo.GetFilePath(id)
+	music, err := s.musicRepo.FindByID(id)
 	if err != nil {
 		return err
 	}
 
+	if music.UploadedBy != username {
+		return errors.New("unauthorized")
+	}
+
 	// Delete the file
-	if err := s.fileService.DeleteFile(filePath); err != nil {
+	if err := s.fileService.DeleteFile(music.FilePath); err != nil {
 		return err
 	}
 

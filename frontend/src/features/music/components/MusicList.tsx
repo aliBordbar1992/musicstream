@@ -14,6 +14,7 @@ export function MusicList({
   loading,
   onDelete,
 }: MusicListProps) {
+  console.log("musicList", musicList);
   const { playTrack } = usePlayer();
 
   const handlePlayTrack = (track: Music) => {

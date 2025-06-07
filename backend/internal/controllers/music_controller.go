@@ -98,9 +98,19 @@ func (c *MusicController) ListMusic(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, music)
 }
 
+func (c *MusicController) GetUserMusic(ctx *gin.Context) {
+	music, err := c.musicService.GetUserMusic(ctx.GetString("username"))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch music"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, music)
+}
+
 func (c *MusicController) DeleteMusic(ctx *gin.Context) {
 	id := ctx.Param("id")
-	err := c.musicService.DeleteMusic(uint(parseUint(id)))
+	err := c.musicService.DeleteMusic(uint(parseUint(id)), ctx.GetString("username"))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete music"})
 		return

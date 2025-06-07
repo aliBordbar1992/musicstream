@@ -65,6 +65,10 @@ export const music = {
     const response = await api.get("/music");
     return response.data;
   },
+  getUserMusic: async () => {
+    const response = await api.get("/me/music");
+    return response.data;
+  },
   getById: async (id: number) => {
     const response = await api.get(`/music/${id}`);
     return response.data;
