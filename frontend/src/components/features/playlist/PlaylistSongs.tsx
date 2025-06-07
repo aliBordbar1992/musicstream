@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { playlists } from "@/lib/api";
 import toast from "react-hot-toast";
 import axios from "axios";
-import { SongItem } from "@/components/features/music/SongItem";
+import { MusicItem } from "@/features/music/components/MusicItem";
 import { Music } from "@/types/domain";
 import ConfirmModal from "@/components/common/ConfirmModal";
 
@@ -61,9 +61,9 @@ export default function PlaylistSongs({
     <>
       <div className="space-y-2">
         {songs.map((song) => (
-          <SongItem
+          <MusicItem
             key={song.id}
-            song={song}
+            music={song}
             onPlay={() => {
               // TODO: Implement play functionality
               console.log("Play song:", song.id);

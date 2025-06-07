@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { SongItem } from "./SongItem";
+import { MusicItem } from "../../../features/music/components/MusicItem";
 import { music } from "@/lib/api";
 import { useDataFetching } from "@/hooks/useDataFetching";
 import { Music } from "@/types/domain";
@@ -34,9 +34,9 @@ export default function RecentlyPlayed() {
   return (
     <div className="space-y-2">
       {songs.map((song) => (
-        <SongItem
+        <MusicItem
           key={`${song.id}-${song.title}`}
-          song={song}
+          music={song}
           onPlay={(song) => {
             // TODO: Implement play functionality
             console.log("Play song:", song.id);

@@ -8,11 +8,20 @@ import { LayoutContent } from "@/components/layouts/LayoutContent";
 import { useUserMusic } from "@/features/music/useMusicContrller";
 
 export default function MusicPage() {
-  const { data: musicList, isLoading } = useUserMusic();
-  console.log("musicList", musicList);
+  const { data: musicList = [], isLoading, refetch } = useUserMusic();
   const handleUploadSuccess = () => {
-    console.log("upload success");
+    refetch();
   };
+
+  const shouldShowDelete = () => {
+    return true;
+  };
+
+  const emptyState = () => (
+    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+      No music found. Upload some music to get started!
+    </div>
+  );
 
   return (
     <LayoutContent>
@@ -35,9 +44,10 @@ export default function MusicPage() {
         </Tabs>
 
         <MusicList
-          music={musicList || []}
-          loading={isLoading}
-          onDelete={handleUploadSuccess}
+          music={musicList}
+          isLoading={isLoading}
+          shouldShowDelete={shouldShowDelete}
+          emptyState={emptyState}
         />
       </div>
     </LayoutContent>

@@ -6,7 +6,6 @@ export function useMusicController() {}
 export class MusicService {
   static async getUserMusic(): Promise<Music[]> {
     const response = await music.getUserMusic();
-    console.log("response", response);
     return response || [];
   }
 }

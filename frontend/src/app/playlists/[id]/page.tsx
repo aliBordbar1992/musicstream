@@ -10,7 +10,7 @@ import { LayoutContent } from "@/components/layouts/LayoutContent";
 import MusicSearch from "@/components/ui/MusicSearch";
 import Button from "@/components/ui/Button";
 import { use } from "react";
-import { SongItem } from "@/components/features/music/SongItem";
+import { MusicItem } from "@/features/music/components/MusicItem";
 import { Music, Playlist } from "@/types/domain";
 import { usePlayer } from "@/store/PlayerContext";
 import { Loading } from "@/components/ui/Loading";
@@ -231,8 +231,8 @@ export default function PlaylistPage({ params }: { params: ParamsType }) {
                       className="flex items-center justify-between"
                     >
                       <div className="flex-1">
-                        <SongItem
-                          song={{
+                        <MusicItem
+                          music={{
                             id: song.id,
                             title: song.title,
                             artist: song.artist,

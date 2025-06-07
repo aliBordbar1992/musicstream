@@ -7,6 +7,7 @@ export interface Music {
   duration: number;
   url: string;
   image?: string;
+  uploaded_by: string;
 }
 
 export interface Artist {

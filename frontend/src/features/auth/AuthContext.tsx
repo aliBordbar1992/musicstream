@@ -20,6 +20,7 @@ interface AuthContextType {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  //TODO: remove gradually
   const authState = useAuthStore();
   const controller = useAuthController();
   return (

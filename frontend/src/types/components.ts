@@ -26,21 +26,6 @@ export interface LinkUploadFormProps {
   onSuccess?: () => void;
 }
 
-export interface MusicListProps {
-  music: Music[];
-  loading: boolean;
-  onDelete?: () => void;
-}
-
-export interface SongItemProps {
-  song: Music;
-  onPlay: (song: Music) => void;
-  onRemove?: (song: Music) => void;
-  showImage?: boolean;
-  className?: string;
-  showRemoveButton?: boolean;
-}
-
 export interface AddToPlaylistProps {
   songId: number;
   onSuccess?: () => void;
@@ -79,11 +64,6 @@ export interface ArtistSearchProps {
   onArtistSelect?: (artist: Artist) => void;
   error?: string;
   required?: boolean;
-}
-
-export interface LoadingProps {
-  size?: "sm" | "md" | "lg";
-  className?: string;
 }
 
 export interface MusicSearchProps {
