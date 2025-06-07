@@ -39,3 +39,4 @@ backend/.env
 
 # certificates
 backend/certs/
+frontend/certs/
